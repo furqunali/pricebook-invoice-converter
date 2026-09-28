@@ -1,0 +1,13 @@
+match_word,site_id,city,address
+North Point,0001,Anytown,"100 Example Blvd, Anytown TX 70001"
+Lakeside,0002,Anytown,"200 Sample Rd, Anytown TX 70002"
+Westgate,0003,Demo City,"300 Placeholder Ave, Demo City TX 70003"
+Riverside,0004,Demo City,"400 Mock Ln, Demo City TX 70004"
+Summit,0005,Demo City,"500 Sample St, Demo City TX 70005"
+Harbor,0006,Anytown,"600 Example Dr, Anytown TX 70006"
+Cedar,0007,Anytown,"700 Demo Rd, Anytown TX 70007"
+Maple,0008,Demo City,"800 Placeholder Blvd, Demo City TX 70008"
+Pine,0009,Anytown,"900 Sample Ave, Anytown TX 70009"
+Grove,0010,Demo City,"1000 Mock St, Demo City TX 70010"
+Depot,0011,Anytown,"110 Example Blvd, Anytown TX 70011"
+Campus,0012,Demo City,"500 Sample St, Demo City TX 70005"

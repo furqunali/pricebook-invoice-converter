@@ -1,0 +1,7 @@
+# This project emits byte-deterministic PDI files. Force LF everywhere so the
+# format goldens (and generated CSVs) never get CRLF-corrupted on checkout.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary

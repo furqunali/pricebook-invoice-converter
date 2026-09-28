@@ -1,0 +1,14 @@
+# Core runtime deps (offline core + batch/review runners + CLI).
+pydantic>=2.6,<3
+pyyaml>=6,<7
+typer>=0.12
+
+# Phase 2 extraction (vision). Install with: pip install -e .[extract]
+#   anthropic>=0.39
+#   google-genai>=0.3     # Gemini free-tier vision provider (provider: gemini)
+#   pypdfium2>=4
+#   numpy>=1.26
+#   Pillow>=10
+
+# Dev / tests
+pytest>=8

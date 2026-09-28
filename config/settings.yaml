@@ -1,0 +1,52 @@
+# Local settings for the converter. Never commit an API key here; keep it off any
+# shared location (use the ANTHROPIC_API_KEY env var on the server). The paths below
+# are sample placeholders — point them at your own data folder.
+provider: "gemini"                     # gemini (free tier) | anthropic
+
+gemini:
+  api_key: ""                          # blank -> GEMINI_API_KEY env var (free tier)
+  extract_model: "gemini-2.5-flash"    # free-tier vision model
+  escalate_model: "gemini-flash-latest"  # stronger free-tier flash; retried once if validation fails
+                                       # (pro models are NOT free tier -> 429)
+
+anthropic:
+  api_key: ""                          # blank -> ANTHROPIC_API_KEY env var (server only)
+  extract_model: "claude-sonnet-5"     # verify current id in the API docs
+  escalate_model: "claude-opus-4-8"    # retried once if validation fails
+
+pdf:
+  dpi: 220
+  deskew: true
+
+output:
+  extension: "csv"                     # MUST match the PDI File Retrieval profile
+  date_format: "MM-DD-YYYY"
+
+batch:
+  daily_prefix: "B"
+  review_prefix: "R"
+  counter_file: "config\\batch_counter.json"
+  reset_counters_daily: true
+
+lookups:
+  vendor_ids: "config\\vendor_ids.csv"
+  site_ids: "config\\site_ids.csv"
+
+# DATA folder. Base = C:\InvoiceConverterData (point this at your own location).
+paths:
+  incoming_dir:  "C:\\InvoiceConverterData\\invoices\\1-incoming"
+  converted_dir: "C:\\InvoiceConverterData\\invoices\\2-converted"
+  review_dir:    "C:\\InvoiceConverterData\\invoices\\3-review"
+  reprocess_dir: "C:\\InvoiceConverterData\\invoices\\3-review\\reprocess"
+  archive_dir:   "C:\\InvoiceConverterData\\invoices\\4-archive"
+  dropzone_dir:  "C:\\InvoiceConverterData\\invoices\\5-pdi-dropzone"
+  reports_dir:   "C:\\InvoiceConverterData\\reports"
+  log_dir:       "C:\\InvoiceConverterData\\logs"
+
+reconciliation:
+  weekly_day: "Monday"
+  pdi_export_dir: ""                   # TODO: where the PDI Export lands
+  vendor_statements_dir: ""            # TODO: where vendor statements land
+
+validation:
+  money_tolerance: 0.01                # one cent (CONFIRMED ANSWER #5)

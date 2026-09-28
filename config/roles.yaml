@@ -1,0 +1,12 @@
+# Chat-agent roles. Trusted-team identification (not hard security — real
+# protection is that code lives only on the owner's machine; see
+# docs/PROTECTION_AND_ROLES.md). Key = Windows username (%USERNAME%), lowercased.
+# role: owner | reviewer | user | viewer
+users:
+  owner:    { name: "Owner", role: owner }      # this machine (the owner's workstation)
+  admin:    { name: "Owner", role: owner }
+  reviewer1: { name: "Reviewer One", role: reviewer }  # primary reviewer
+  reviewer2: { name: "Reviewer Two", role: reviewer }  # backup reviewer
+  director: { name: "Director", role: viewer }
+
+default_role: user

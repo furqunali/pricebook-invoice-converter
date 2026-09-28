@@ -404,7 +404,7 @@ code{background:var(--mist);padding:1px 4px;border-radius:2px;font-family:var(--
       <div id="chatPane">
         <div id="chatLog"></div>
         <div id="chatRow">
-          <textarea id="chatIn" placeholder="Ask a question or answer one — for example: invoice 1 is Westlake, or line 4 price should be 12.50"></textarea>
+          <textarea id="chatIn" placeholder="Ask a question or answer one — for example: invoice 1 is Lakeside, or line 4 price should be 12.50"></textarea>
           <button class="btn sm" id="chatSend">Send</button>
         </div>
       </div>
@@ -2041,7 +2041,7 @@ function raiseQuestions(){
   });
   pushMsg('assistant',
     'I need your input on ' + open.length + ' invoice' + (open.length > 1 ? 's' : '') + ':\n\n' +
-    lines.join('\n\n') + '\n\nReply with the correct details, for example: "#1 is Westlake" or ' +
+    lines.join('\n\n') + '\n\nReply with the correct details, for example: "#1 is Lakeside" or ' +
     '"#2 line 4 price is 12.50". I will update the invoice for you.');
   showTab('chat');
 }

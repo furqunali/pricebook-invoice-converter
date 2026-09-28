@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdi-invoice-converter"
+version = "0.1.0"
+description = "Convert multi-vendor supplier invoices into validated PDI import files."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.6,<3",
+    "pyyaml>=6,<7",
+    "typer>=0.12",           # CLI (invoice2pdi) drives the Task Scheduler runners
+]
+
+[project.optional-dependencies]
+# Phase 2 extraction deps. Not needed for the offline core / batch orchestration.
+extract = [
+    "anthropic>=0.39",
+    "google-genai>=0.3",     # Gemini free-tier vision provider
+    "pypdfium2>=4",
+    "numpy>=1.26",
+    "Pillow>=10",
+]
+reports = ["openpyxl>=3.1", "reportlab>=4"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+# Wired in Phase 3 (cli.py). Declared now so packaging is stable.
+invoice2pdi = "pdi_invoice_converter.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
