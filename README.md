@@ -4,7 +4,7 @@ Turn scanned or photographed **supplier invoices** (PDF / JPG / PNG) into a
 back-office **Pricebook import file** (`.txt`) using a vision-capable LLM — entirely
 in the browser, with a deterministic output builder you can trust.
 
-> **Live demo:** _(add your Vercel URL here)_
+> **Live demo:** https://pricebook-invoice-converter.vercel.app
 >
 > This public demo ships with **fictional sample vendors and stores** so it can be
 > shared safely. It is fully functional — bring your own API key and your own
