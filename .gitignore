@@ -1,0 +1,25 @@
+# Private, real-data version — NEVER publish
+private/
+*-internal.html
+
+# Local backups / working copies
+*.backup.html
+*.bak
+_backup/
+99_Archive/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Vercel
+.vercel
+
+# Secrets (belt-and-suspenders — no keys should ever be committed)
+.env
+.env.*
+*.key
+*token*.txt

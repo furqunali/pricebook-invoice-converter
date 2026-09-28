@@ -1,0 +1,2353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pricebook Invoice Convertor</title>
+<style>
+:root{
+  --deep:#215967;
+  --teal:#31869B;
+  --slate:#2F4F4F;
+  --mist:#D9DDE7;
+  --paper:#F2F4F8;
+  --white:#FFFFFF;
+  --line:#BFC7D6;
+  --ink:#1B2A2E;
+  --muted:#5E7079;
+  --ok:#1E7A5A;
+  --warn:#A8531B;
+  --bad:#A32F22;
+  --font:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","Consolas","Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:var(--font);font-size:13px;color:var(--ink);
+  background:var(--paper);display:flex;flex-direction:column;overflow:hidden}
+button{font-family:inherit;font-size:12px;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:12px;color:var(--ink)}
+input,select{border:1px solid var(--line);background:var(--white);padding:5px 7px;border-radius:2px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:-1px}
+
+.titlebar{background:var(--deep);color:#fff;display:flex;align-items:center;gap:10px;
+  padding:0 12px;height:38px;flex:0 0 auto;border-bottom:1px solid #16404a}
+.titlebar .logo{width:22px;height:22px;border:1px solid #7FB3C0;border-radius:2px;
+  display:grid;place-items:center;font-size:11px;font-weight:700;color:#BFE0E8}
+.titlebar h1{font-size:13px;font-weight:600;margin:0}
+.titlebar .sub{font-size:11px;color:#9EC4CE}
+.titlebar .spacer{flex:1}
+.tbtn{background:transparent;border:1px solid #4E8B9B;color:#DCEDF2;padding:4px 10px;border-radius:2px}
+.tbtn:hover{background:#2C6B7A}
+.tbtn.danger{border-color:#C2705F;color:#F3D5CE}
+.tbtn.danger:hover{background:#8F3527;border-color:#8F3527}
+
+.menubar{background:var(--mist);border-bottom:1px solid var(--line);height:30px;flex:0 0 auto;
+  display:flex;align-items:center;gap:6px;padding:0 10px}
+.menubar .step{display:flex;align-items:center;gap:6px;color:var(--slate);font-size:11.5px}
+.menubar .step b{display:grid;place-items:center;width:16px;height:16px;border-radius:50%;
+  background:var(--teal);color:#fff;font-size:10px;font-weight:700}
+.menubar .sep{color:#9AA7B8}
+
+.workspace{flex:1;display:flex;min-height:0}
+.panel{display:flex;flex-direction:column;min-height:0;background:var(--white)}
+.panel-head{background:linear-gradient(var(--white),#EDF1F6);border-bottom:1px solid var(--line);
+  padding:7px 10px;flex:0 0 auto;display:flex;align-items:center;gap:8px}
+.panel-head h2{margin:0;font-size:12px;font-weight:600;color:var(--deep)}
+.panel-head .count{background:var(--mist);color:var(--slate);border:1px solid var(--line);
+  border-radius:9px;padding:0 6px;font-size:10.5px;line-height:15px}
+.panel-head .spacer{flex:1}
+.panel-body{overflow:auto;padding:10px;flex:1;min-height:0}
+#left{width:335px;flex:0 0 auto;border-right:1px solid var(--line)}
+#right{flex:1;background:var(--paper)}
+
+.field{margin-bottom:9px}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px}
+.field input,.field select{width:100%}
+.hint{font-size:10.5px;color:var(--muted);line-height:1.45;margin-top:3px}
+.row{display:flex;gap:6px;align-items:center}
+.card{border:1px solid var(--line);background:var(--white);border-radius:3px;margin-bottom:10px}
+.card>.ch{background:var(--mist);padding:5px 9px;font-size:11.5px;font-weight:600;color:var(--slate);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px}
+.card>.ch .spacer{flex:1}
+.card>.cb{padding:9px}
+.chk{display:flex;align-items:flex-start;gap:6px;font-size:11.5px;color:var(--slate)}
+.chk input{width:auto;margin-top:1px}
+
+#drop{border:2px dashed var(--teal);background:#EAF2F5;border-radius:3px;padding:16px 10px;
+  text-align:center;color:var(--deep);cursor:pointer}
+#drop.on{background:#D6E7EC;border-color:var(--deep)}
+#drop .big{font-size:12.5px;font-weight:600;margin-bottom:3px}
+#drop .sm{font-size:10.5px;color:var(--muted)}
+
+.flist{border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.frow{display:flex;align-items:center;gap:6px;padding:5px 7px;border-bottom:1px solid #E6EAF0;
+  background:var(--white);font-size:11.5px}
+.frow:last-child{border-bottom:0}
+.frow.joined{background:#F4F8FA;border-left:3px solid var(--teal)}
+.frow .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow .sz{color:var(--muted);font-size:10px}
+.ficon{width:18px;height:18px;border-radius:2px;display:grid;place-items:center;
+  font-size:8.5px;font-weight:700;color:#fff;background:var(--slate);flex:0 0 auto}
+.ficon.pdf{background:#A32F22}
+.ficon.img{background:var(--teal)}
+.mini{border:1px solid var(--line);background:var(--white);color:var(--slate);
+  border-radius:2px;padding:2px 5px;font-size:10.5px;line-height:1.3}
+.mini:hover{background:var(--mist)}
+.mini.act{background:var(--teal);color:#fff;border-color:var(--deep)}
+.mini:disabled{opacity:.35;cursor:default}
+
+.btn{border:1px solid var(--deep);background:var(--teal);color:#fff;padding:7px 14px;
+  border-radius:2px;font-weight:600}
+.btn:hover{background:var(--deep)}
+.btn:disabled{background:#9FB3B9;border-color:#9FB3B9;cursor:default}
+.btn.ghost{background:var(--white);color:var(--deep)}
+.btn.ghost:hover{background:var(--mist)}
+.btn.wide{width:100%}
+.btn.sm{padding:5px 10px;font-weight:500}
+
+.inv{border:1px solid var(--line);background:var(--white);border-radius:3px;margin-bottom:11px}
+.inv-head{display:flex;align-items:center;gap:8px;padding:6px 9px;background:var(--mist);
+  border-bottom:1px solid var(--line)}
+.inv-head .ttl{font-size:12px;font-weight:600;color:var(--deep);flex:1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:2px;color:#fff}
+.badge.ok{background:var(--ok)}
+.badge.warn{background:var(--warn)}
+.badge.bad{background:var(--bad)}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:9px;border-bottom:1px solid #E6EAF0}
+.grid .field{margin:0}
+table.items{width:100%;border-collapse:collapse;font-size:11.5px}
+table.items th{background:#EDF1F6;color:var(--slate);font-weight:600;text-align:left;
+  padding:4px 6px;border-bottom:1px solid var(--line);font-size:10.5px}
+table.items td{padding:2px 4px;border-bottom:1px solid #EEF1F5}
+table.items input{width:100%;border:1px solid transparent;background:transparent;padding:3px 4px}
+table.items input:hover{border-color:var(--line);background:var(--white)}
+table.items input.num{text-align:right;font-family:var(--mono)}
+table.items td.ext{text-align:right;font-family:var(--mono);color:var(--muted);white-space:nowrap;padding-right:8px}
+table.items tr.neg input.num{color:var(--bad)}
+.tfoot{display:flex;align-items:center;gap:10px;padding:7px 9px;background:#F7F9FB;font-size:11.5px}
+.tfoot .calc{font-family:var(--mono);color:var(--slate)}
+.tfoot .spacer{flex:1}
+.issues{padding:7px 9px;background:#FBF1E6;border-top:1px solid #E7CFAE;color:#7A4A12;font-size:11px}
+.issues ul{margin:3px 0 0 16px;padding:0}
+
+#outwrap{border-top:1px solid var(--line);background:var(--slate);color:#D9E6EA;flex:0 0 auto;
+  display:flex;flex-direction:column;height:260px}
+.tab{background:transparent;border:1px solid transparent;color:#AFD3DC;padding:3px 10px;border-radius:2px;font-size:11.5px}
+.tab.on{background:var(--slate);color:#fff;border-color:#4E8B9B;font-weight:600}
+#chatPane{flex:1;display:none;flex-direction:column;min-height:0;background:#27403F}
+#outwrap.chat #chatPane{display:flex}
+#outwrap.chat #out{display:none}
+#outwrap.collapsed #chatPane{display:none}
+#chatLog{flex:1;overflow:auto;padding:9px 10px;display:flex;flex-direction:column;gap:7px}
+.msg{max-width:84%;padding:6px 9px;border-radius:4px;font-size:11.5px;line-height:1.55;white-space:pre-wrap}
+.msg.bot{background:#33514F;color:#DCEBEE;align-self:flex-start;border:1px solid #3E5F5C}
+.msg.me{background:var(--teal);color:#fff;align-self:flex-end}
+.msg.sys{background:transparent;color:#8FB0B3;align-self:center;font-size:10.5px;font-style:italic}
+#chatRow{display:flex;gap:6px;padding:7px 9px;border-top:1px solid #3E5F5C;background:#2B4746}
+#chatIn{flex:1;resize:none;height:38px;border:1px solid #4E8B9B;background:#1F3736;color:#E3F0F2;
+  border-radius:2px;padding:6px 8px;font-size:11.5px;font-family:inherit}
+#chatIn::placeholder{color:#7E9EA1}
+#outwrap.collapsed{height:32px}
+#outbar{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--deep);
+  color:#DCEDF2;font-size:11.5px;flex:0 0 auto}
+#outbar .spacer{flex:1}
+#out{flex:1;margin:0;border:0;padding:8px 10px;background:#27403F;color:#CFE4E7;
+  font-family:var(--mono);font-size:11.5px;line-height:1.5;resize:none;white-space:pre;overflow:auto}
+#outwrap.collapsed #out{display:none}
+
+.statusbar{height:24px;flex:0 0 auto;background:var(--mist);border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;padding:0 10px;font-size:11px;color:var(--slate)}
+.statusbar .dot{width:8px;height:8px;border-radius:50%;background:#9AA7B8}
+.statusbar .dot.busy{background:var(--warn)}
+.statusbar .dot.ok{background:var(--ok)}
+.statusbar .dot.err{background:var(--bad)}
+.statusbar .spacer{flex:1}
+.statusbar .tok{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+
+#log{font-family:var(--mono);font-size:10.5px;color:var(--muted);max-height:120px;overflow:auto}
+#log div{padding:1px 0;border-bottom:1px dotted #E6EAF0}
+#log .e{color:var(--bad)}
+#log .s{color:var(--ok)}
+
+body.simple #cardRead, body.simple #cardUsage, body.simple #cardLog,
+body.simple #providerWrap, body.simple #modelWrap, body.simple #baseWrap,
+body.simple #advBtns, body.simple #keyHint{display:none}
+body.simple #left{width:300px}
+body.simple #cardConn.ready{display:none}
+#connBadge{display:none;align-items:center;gap:6px;padding:6px 9px;margin-bottom:10px;
+  background:#E8F3EC;border:1px solid #BBD9C7;border-radius:3px;color:#14603F;font-size:11.5px}
+#connBadge.on{display:flex}
+#saveBtn.dirty{background:var(--warn);color:#fff;border-color:#8A4416}
+#saveBtn.saved{background:var(--ok);color:#fff;border-color:#155C43}
+#connBadge .spacer{flex:1}
+
+#progwrap{display:none;align-items:center;gap:10px;padding:7px 10px;background:#EAF2F5;
+  border-bottom:1px solid var(--line);font-size:11.5px;color:var(--deep);flex:0 0 auto}
+#progwrap.on{display:flex}
+#progwrap.done{background:#E8F3EC;color:#14603F}
+#progwrap.fail{background:#FBEDEA;color:#8A2D20}
+#progtrack{flex:1;height:6px;background:var(--mist);border-radius:3px;overflow:hidden;min-width:60px}
+#progfill{height:100%;width:0;background:var(--teal);transition:width .35s}
+#progwrap.done #progfill{background:var(--ok)}
+#progwrap.fail #progfill{background:var(--bad)}
+#progtext{white-space:nowrap}
+#progTime{font-family:var(--mono);color:var(--muted);white-space:nowrap}
+
+.empty{border:1px dashed var(--line);background:var(--white);border-radius:3px;
+  padding:34px 20px;text-align:center;color:var(--muted)}
+.empty h3{margin:0 0 5px;color:var(--slate);font-size:13px}
+.empty p{margin:0;font-size:11.5px;line-height:1.6}
+
+.modal{position:fixed;inset:0;background:rgba(31,52,58,.55);display:none;place-items:center;z-index:50}
+.modal.on{display:grid}
+.modal .box{background:var(--white);border:1px solid var(--deep);border-radius:3px;
+  width:min(580px,92vw);max-height:84vh;display:flex;flex-direction:column}
+.modal .box h3{margin:0;background:var(--deep);color:#fff;padding:8px 12px;font-size:12.5px;font-weight:600}
+.modal .box .c{padding:14px;overflow:auto;font-size:12px;line-height:1.65;color:var(--slate)}
+.modal .box .c ol{margin:6px 0 10px 18px;padding:0}
+.modal .box .c li{margin-bottom:5px}
+.modal .box .f{padding:9px 12px;border-top:1px solid var(--line);text-align:right;background:#F7F9FB}
+code{background:var(--mist);padding:1px 4px;border-radius:2px;font-family:var(--mono);font-size:11px}
+
+@media (max-width:860px){
+  .workspace{flex-direction:column;overflow:auto}
+  #left{width:auto;border-right:0;border-bottom:1px solid var(--line)}
+  .grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <div class="logo">PB</div>
+  <h1>Pricebook Invoice Convertor</h1>
+  <span class="sub">supplier invoice &rarr; import .txt</span>
+  <div class="spacer"></div>
+  <button class="tbtn" id="modeBtn">Advanced view</button>
+  <button class="tbtn" id="clearAllBtn">Clear all</button>
+  <button class="tbtn danger" id="resetAllBtn">Reset app</button>
+  <button class="tbtn" id="helpBtn">Help</button>
+</div>
+
+<div class="menubar">
+  <div class="step"><b>1</b> Add files</div><span class="sep">&rsaquo;</span>
+  <div class="step"><b>2</b> Convert</div><span class="sep">&rsaquo;</span>
+  <div class="step"><b>3</b> Check and fix</div><span class="sep">&rsaquo;</span>
+  <div class="step"><b>4</b> Download .txt</div>
+</div>
+
+<div class="workspace">
+
+  <section class="panel" id="left">
+    <div class="panel-head">
+      <h2>Input</h2>
+      <span class="count" id="fileCount">0 files</span>
+      <div class="spacer"></div>
+      <button class="mini" id="clearFiles">Clear files</button>
+    </div>
+    <div class="panel-body">
+
+      <div id="drop">
+        <div class="big">Drag invoices here</div>
+        <div class="sm">or click to browse — PDF, JPG, PNG, WEBP</div>
+      </div>
+      <input type="file" id="picker" multiple accept=".pdf,image/*" style="display:none">
+
+      <div style="height:10px"></div>
+      <div class="flist" id="flist"></div>
+
+      <div style="height:10px"></div>
+      <button class="btn wide" id="runBtn" disabled>Convert</button>
+      <div class="hint" id="runHint">Enter your API key and add files first.</div>
+
+      <div style="height:12px"></div>
+
+      <div id="connBadge">
+        <b>Connected</b><span id="connWho"></span>
+        <div class="spacer"></div>
+        <button class="mini" id="connEdit">Change</button>
+      </div>
+
+      <div class="card" id="cardConn">
+        <div class="ch">Connection</div>
+        <div class="cb">
+          <div class="field" id="providerWrap">
+            <label for="provider">Provider</label>
+            <select id="provider">
+              <option value="claude">Claude (Anthropic)</option>
+              <option value="gemini">Gemini (Google)</option>
+              <option value="other">Any other (OpenAI-compatible)</option>
+            </select>
+          </div>
+          <div class="field" id="baseWrap" style="display:none">
+            <label for="baseUrl">API base URL</label>
+            <input id="baseUrl" list="bases" placeholder="https://api.openai.com/v1">
+            <datalist id="bases">
+              <option value="https://api.openai.com/v1">OpenAI</option>
+              <option value="https://openrouter.ai/api/v1">OpenRouter</option>
+              <option value="https://api.groq.com/openai/v1">Groq</option>
+              <option value="https://api.deepseek.com/v1">DeepSeek</option>
+              <option value="https://api.mistral.ai/v1">Mistral</option>
+              <option value="https://api.x.ai/v1">xAI</option>
+              <option value="https://generativelanguage.googleapis.com/v1beta/openai">Gemini (OpenAI mode)</option>
+              <option value="http://localhost:1234/v1">Local server</option>
+            </datalist>
+            <div class="hint">Whatever address your provider gives you, ending in /v1.</div>
+          </div>
+          <div class="field">
+            <label for="key"><span id="keyLabel">Anthropic API key</span></label>
+            <input type="password" id="key" placeholder="sk-ant-..." autocomplete="off">
+            <div class="hint" id="keyHint">Saved only in this browser. Each team member enters their own key once.</div>
+          </div>
+          <div class="field" id="modelWrap">
+            <label for="model">Model</label>
+            <input id="model" list="models" value="claude-sonnet-5">
+            <datalist id="models"></datalist>
+            <div class="hint" id="modelHint">Sonnet handles clean PDFs well. Use Opus for blurry photos or messy scans.</div>
+          </div>
+          <div class="row">
+            <button class="btn sm" id="connectBtn">Connect</button>
+            <span id="advBtns" class="row">
+              <button class="btn ghost sm" id="testBtn">Test</button>
+              <button class="btn ghost sm" id="loadModelsBtn">Load models</button>
+            </span>
+            <button class="btn ghost sm" id="diagBtn">Diagnostics</button>
+          </div>
+          <div class="hint" id="testOut" style="margin-top:5px"></div>
+          <div class="hint">Both keys are remembered separately, so you can switch providers any time.</div>
+        </div>
+      </div>
+
+      <div class="card" id="cardRead">
+        <div class="ch">Reading options</div>
+        <div class="cb">
+          <div class="field">
+            <label for="mode">How to read the files</label>
+            <select id="mode">
+              <option value="each">One file at a time (default, faster)</option>
+              <option value="all">All files in a single request</option>
+            </select>
+          </div>
+          <div class="hint" style="margin-bottom:9px">
+            If one invoice is split across two files (for example a Restaurant Depot cover sheet plus
+            the stored receipt details), press <b>+ join</b> on the second file so they are read together.
+          </div>
+          <div class="field">
+            <label for="houseRules">Extra rules for every conversion</label>
+            <textarea id="houseRules" rows="4" style="width:100%;border:1px solid var(--line);border-radius:2px;
+              padding:5px 7px;font-family:inherit;font-size:11.5px;resize:vertical"></textarea>
+            <div class="hint">One rule per line. Use this for vendor quirks instead of waiting for a new version.</div>
+          </div>
+          <label class="chk">
+            <input type="checkbox" id="descOn">
+            <span>Include item descriptions<br>
+              <span class="hint" style="margin:0">Easier to check by eye, but uses more tokens. Off by default.</span></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card" id="cardUsage">
+        <div class="ch">Usage
+          <div class="spacer"></div>
+          <button class="mini" id="resetTok">Reset</button>
+        </div>
+        <div class="cb">
+          <div class="hint" style="margin:0" id="tokBox">No requests sent yet.</div>
+          <div class="hint">The vendor rules are cached on Anthropic's side, so every request after the
+            first one in a 5 minute window costs about a tenth as much. Convert in batches to save the most.</div>
+        </div>
+      </div>
+
+      <div class="card" id="cardLog">
+        <div class="ch">Activity</div>
+        <div class="cb"><div id="log"><div>Ready.</div></div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="panel" id="right">
+    <div class="panel-head">
+      <h2>Invoices</h2>
+      <span class="count" id="invCount">0</span>
+      <div class="spacer"></div>
+      <button class="mini act" id="saveBtn" title="Save your edits into the output file">Save changes</button>
+      <button class="mini" id="reDl" title="Download the .txt again">Download .txt</button>
+      <button class="mini" id="stripZeros" title="Remove leading zeros from every item number">Strip leading 0s</button>
+      <button class="mini" id="padZeros" title="Put item numbers back to 6 digits with leading zeros">Pad to 6 digits</button>
+      <button class="mini" id="undoBtn" title="Undo the last bulk change" disabled>Undo</button>
+      <button class="mini" id="addInv">+ Blank invoice</button>
+      <button class="mini" id="clearInv">Clear invoices</button>
+    </div>
+    <div id="progwrap">
+      <span id="progtext">Working...</span>
+      <div id="progtrack"><div id="progfill"></div></div>
+      <span id="progTime"></span>
+      <button class="mini act" id="progDl" style="display:none">Download .txt</button>
+      <button class="mini" id="progHide" style="display:none">&#10005;</button>
+    </div>
+    <div class="panel-body" id="invList"></div>
+
+    <div id="outwrap" class="collapsed">
+      <div id="outbar">
+        <button class="tab on" id="tabOut">Output file</button>
+        <button class="tab" id="tabChat">Assistant</button>
+        <span id="outMeta">0 lines</span>
+        <div class="spacer"></div>
+        <button class="mini" id="toggleOut">Show</button>
+        <button class="mini" id="copyBtn">Copy</button>
+        <button class="mini act" id="dlBtn">Download .txt</button>
+      </div>
+      <textarea id="out" readonly spellcheck="false"></textarea>
+      <div id="chatPane">
+        <div id="chatLog"></div>
+        <div id="chatRow">
+          <textarea id="chatIn" placeholder="Ask a question or answer one — for example: invoice 1 is Westlake, or line 4 price should be 12.50"></textarea>
+          <button class="btn sm" id="chatSend">Send</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="statusbar">
+  <span class="dot" id="dot"></span>
+  <span id="status">Ready</span>
+  <span class="tok" id="tokBar"></span>
+  <div class="spacer"></div>
+  <span id="warnCount"></span>
+  <span>Pricebook Invoice Convertor</span>
+</div>
+
+<div class="modal" id="diagModal">
+  <div class="box">
+    <h3>Diagnostics</h3>
+    <div class="c"><pre id="diagOut" style="white-space:pre-wrap;font-family:var(--mono);font-size:11px;margin:0"></pre></div>
+    <div class="f">
+      <button class="btn ghost sm" id="diagCopy">Copy report</button>
+      <button class="btn sm" id="diagClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="helpModal">
+  <div class="box">
+    <h3>Pricebook Invoice Convertor — how to use it</h3>
+    <div class="c">
+      <ol>
+        <li><b>API key.</b> Paste any key into the Connection box and press <b>Connect</b> — the tool
+            works out by itself whether it is a Claude key (<code>sk-ant-...</code>) or a Gemini key
+            (<code>AIza...</code> / <code>AQ...</code>), loads the models that key can actually use, picks a
+            working one and tests it. Claude keys come from <code>console.anthropic.com</code> &rarr; API Keys,
+            Gemini keys from <code>aistudio.google.com</code> &rarr; API keys. Any other service
+            (OpenAI, OpenRouter, Groq, DeepSeek, Mistral, xAI, or a server of your own) works too —
+            choose <b>Any other (OpenAI-compatible)</b>, put in the base URL your provider gives you, and
+            press Connect. The key stays in this browser, and each provider keeps its own key.
+            <br>If anything fails, press <b>Diagnostics</b> — it prints exactly what went wrong and a
+            <b>Copy report</b> button to send on. Model names change over time, so if one is rejected,
+            press <b>Load models</b> and the tool will list exactly what your key can use.</li>
+        <li><b>Add files.</b> Drag invoice PDFs or photos in, or click the box to browse.
+            Files are read in the order you add them.</li>
+        <li><b>Join.</b> If one invoice is spread over two files, press <b>+ join</b> on the second file.</li>
+        <li><b>Convert.</b> Each invoice appears as a card with its vendor, store, invoice number,
+            date, total and every line item.</li>
+        <li><b>Check.</b> A green OK badge means the line items add up to the invoice total.
+            A red CHECK badge means something needs your attention — the reason is listed under the table.
+            Fix anything directly in the card.</li>
+        <li><b>Download.</b> Use Download .txt in the output bar. The file follows the exact import
+            format, so you can upload it straight to the back office system.</li>
+      </ol>
+      <p><b>Clear all</b> empties the files, invoices and output but keeps your API key.
+         <b>Reset app</b> wipes everything including the saved key and settings, like opening the tool for the first time.</p>
+      <p><b>Sharing.</b> Keep this file in Google Drive, but each person must download it first and open it
+         in Chrome or Edge. HTML files do not run inside the Drive preview window.</p>
+      <p><b>Free keys.</b> Google AI Studio gives a free Gemini key on a normal Google account:
+         <code>aistudio.google.com</code> &rarr; API keys &rarr; Create API key. It takes about a minute and
+         needs no card. That is the quickest way for a teammate to get going. The free tier has daily
+         limits, so for heavy days a paid key is steadier.</p>
+      <p><b>One key for the whole team.</b> Whoever looks after this file can paste one company key into the
+         <code>BUILT_IN</code> line near the bottom of the file, in a text editor. Everyone who opens that copy
+         is then connected with no setup at all. Keep a spending limit on that key, since anyone holding the
+         file can read it.</p>
+      <p><b>Simple and Advanced views.</b> Simple view shows only what is needed: add files, convert, check,
+         download. Advanced view adds the provider, model, reading options, token usage and the activity log.</p>
+      <p><b>PDFs on other providers.</b> Claude and Gemini read PDFs directly. OpenAI-compatible services
+         only take images, so the tool turns each PDF page into a picture first — that needs an internet
+         connection the first time you use it, and only the first 15 pages of a file are sent.</p>
+      <p><b>Very large invoices.</b> If a bill has hundreds of lines, the tool automatically reads it again
+         with a bigger budget. If it is still too long, whatever was read is kept and flagged, so split that
+         PDF into two halves and convert them separately.</p>
+      <p><b>Always check the badges before downloading.</b> The tool reads the invoice and then adds up
+         every line against the printed total, so mistakes show up as a red badge instead of slipping into the file.</p>
+    </div>
+    <div class="f"><button class="btn sm" id="closeHelp">Close</button></div>
+  </div>
+</div>
+
+<script>
+const RULES_TEXT = `
+You are a data-conversion assistant. Convert the attached supplier invoice(s) —
+provided as PDF and/or image files — into a single plain-text (.txt) file in the
+EXACT format below. Output only the text, nothing else — no explanations, no
+markdown, no commentary, no totals lines.
+
+NOTE: This PUBLIC demo ships with FICTIONAL sample vendors and stores so it can be
+shared safely. Replace the two lookup tables below (VENDOR ID LOOKUP and SITE ID
+LOOKUP) with your own vendor codes and store list to use it for real.
+
+========================================================================
+OVERALL STRUCTURE
+========================================================================
+The file is grouped BY VENDOR. For each vendor that appears in the uploaded
+invoices:
+
+  1. First write the vendor block header line, ONCE, for that vendor:
+        0000,MI,<VENDOR_ID>
+  2. Then write ALL of that vendor's invoices, one after another. Each invoice
+     is its own 1200 header line followed by that invoice's 1202 item lines.
+
+RULES FOR GROUPING:
+- The 0000,MI,<VENDOR_ID> line appears ONCE per vendor block, right before that
+  vendor's first invoice. Do NOT repeat it between invoices of the SAME vendor.
+- When the vendor changes, write a NEW 0000,MI,<VENDOR_ID> line.
+- No blank lines anywhere. Process vendors/invoices in upload order.
+
+========================================================================
+VENDOR ID LOOKUP
+========================================================================
+Read the VENDOR / SUPPLIER name on each invoice (the company that ISSUED the
+invoice — the seller, usually at the top / letterhead, NOT the "Sold to" store).
+Match it to the table below and use that Vendor ID in the 0000 line.
+Match on the main distinctive word(s), ignoring suffixes like LLC, INC, CO.
+
+  ACME BEVERAGE CO                             100
+  SAMPLE SNACKS LLC                            110
+  DEMO DAIRY DISTRIBUTORS                      131
+  ORCHARD FRUIT CO                             197
+  GENERIC GROCERY SUPPLY                       202
+  EXAMPLE ENERGY DRINKS                        235
+  TEST TREATS INC                              127
+  PLACEHOLDER PACKAGING                        2526
+  WIDGET WHOLESALE SUPPLY                      4019
+  MOCK MAINTENANCE SERVICES                    300
+
+If the vendor name on an invoice does NOT clearly match any entry above, STOP and
+ask which vendor it is instead of guessing. Do not invent a Vendor ID.
+
+========================================================================
+INVOICE HEADER LINE (one per invoice)
+========================================================================
+1200,<DATE>,<SITE_ID>,<INVOICE_REF>,I,,<TOTAL>,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+- DATE        = invoice date as YYYYMMDD  (07/10/26 -> 20260710)
+- SITE_ID     = 4-digit store site ID, looked up from the STORE name (the
+                "Sold to" / "Ship to" store the goods went to). See SITE ID LOOKUP.
+- INVOICE_REF = the invoice number exactly as printed.
+- TOTAL       = the invoice "Net Total" figure ONLY. Use 2 decimals. If Gross Sale
+                and Net Total differ, ALWAYS take Net Total.
+- Keep the long run of trailing commas exactly as shown.
+
+========================================================================
+SITE ID LOOKUP (the STORE the goods were delivered to)
+========================================================================
+Identify the store by EITHER its name OR its ship-to address.
+Match on the main word in the store name, ignoring extra words like "SHELL",
+"STATION", store numbers, etc.
+
+  Store Name       Site ID   City        Address
+  ---------------  -------   ---------   ------------------------------------
+  North Point      0001      Anytown     100 Example Blvd, Anytown TX 70001
+  Lakeside         0002      Anytown     200 Sample Rd, Anytown TX 70002
+  Westgate         0003      Demo City   300 Placeholder Ave, Demo City TX 70003
+  Riverside        0004      Demo City   400 Mock Ln, Demo City TX 70004
+
+If the store name/address does NOT clearly match any entry above, STOP and ask
+which site it is instead of guessing. Do not invent a Site ID.
+
+========================================================================
+ITEM LINES — one line per item on the invoice
+========================================================================
+1202,<ITEM#>,,<QTY>,<PRICE>,,,,
+
+- ITEM#  = the Item # exactly as printed in the invoice's Item # column. Keep the
+           SAME number of digits/characters as shown — do NOT add or remove
+           leading zeros.
+
+  VENDOR-SPECIFIC ITEM# RULES (examples — these OVERRIDE the default above).
+  In the full internal version each real vendor has its own tuned rule; three
+  representative sample rules are shown here to demonstrate the pattern:
+
+  * SAMPLE SNACKS (Vendor 110) -> use the UPC number in the first column (the
+    number right after QTY), NOT the "ITEM" number.
+
+  * EXAMPLE ENERGY DRINKS (Vendor 235) -> use the item's ID No. as the ITEM#, but
+    DROP a leading letter prefix (e.g. EE12345 -> 12345). For the header TOTAL use
+    the "INVOICE" amount, NOT the "TOTAL DUE".
+
+  * ACME BEVERAGE (Vendor 100) -> if the invoice shows a per-unit NET price column,
+    use that per-unit NET value as PRICE and the Cases column as QTY (do not
+    multiply NET by quantity).
+
+- QTY    = quantity SHIPPED, 4 decimals (3 -> 3.0000).
+- PRICE  = 4 decimals. Normal item -> the price charged (not retail). Discounted
+           item -> the Net Price (after discount).
+- Keep the ONE empty field between item# and qty, and the FOUR empty fields at end.
+- Include EVERY line item, in the order printed. Never skip one.
+
+INVOICE-LEVEL DISCOUNT (only if the discount is on the WHOLE invoice):
+  1202,<DISCOUNT_ITEM#>,,1.0000,<DISCOUNT_AMOUNT>,,,,
+  - DISCOUNT_AMOUNT is ALWAYS NEGATIVE, 4 decimals (a $20 discount -> -20.0000).
+
+RETURNS: enter as a normal 1202 line, SAME Item #, QTY negative (2 returned ->
+-2.0000), PRICE positive.
+
+SALES TAX LINE (only if the invoice shows a tax amount):
+  1202,SALES TAX,,1.0000,<TAX_AMOUNT>,,,,
+
+OTHER CHARGES (fuel surcharge, shipping, delivery, handling — no item # of their
+own): make a VIN from the charge's own name in CAPS and use Qty 1:
+  1202,<CHARGE_NAME>,,1.0000,<CHARGE_AMOUNT>,,,,
+
+========================================================================
+GENERAL RULES
+========================================================================
+- Always 4 decimals for qty and price. 2 decimals for the invoice Net Total.
+- No spaces anywhere. No blank lines. Plain text only.
+- Each invoice keeps its own date, site ID, invoice number, and net total.
+- If anything is unclear or a name doesn't match a lookup, STOP and ask — never
+  guess an ID.
+
+========================================================================
+EXAMPLES
+========================================================================
+Vendor block start (Sample Snacks):
+0000,MI,110
+
+Invoice header, store North Point (0001), invoice 11726193, net total 707.78, dated 11/19/25:
+1200,20251119,0001,11726193,I,,707.78,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+Normal item 003021, shipped 6, price $34.99:
+1202,003021,,6.0000,34.9900,,,,
+
+Zero-shipped item 56691, price 29.30:
+1202,56691,,.0000,29.3000,,,,
+
+Sales tax of $1.07:
+1202,SALES TAX,,1.0000,1.0700,,,,
+
+Invoice-wide discount of $20 (no VIN on PDF, create one):
+1202,DISCOUNT,,1.0000,-20.0000,,,,
+
+Returned item 003021, 2 returned, price $34.99:
+1202,003021,,-2.0000,34.9900,,,,
+
+Fuel surcharge of $12.50 with no item # on the invoice:
+1202,FUEL,,1.0000,12.5000,,,,
+`;
+</script>
+
+<script>
+/* ============================================================
+   Pricebook Invoice Convertor
+   The model only extracts data (JSON). This file builds the
+   final .txt itself, so the output format is always exact.
+   ============================================================ */
+
+const $ = s => document.querySelector(s);
+const RULES = RULES_TEXT;
+
+/* ---------- lookups parsed from the rules text ---------- */
+const VENDORS = (() => {
+  const a = RULES.indexOf('VENDOR ID LOOKUP');
+  const b = RULES.indexOf('If the vendor name on an invoice does NOT');
+  const out = [];
+  RULES.slice(a, b).split('\n').forEach(l => {
+    const m = l.match(/^\s{2}(\S.*?)\s{2,}(\d{3,4})\s*$/);
+    if (m) out.push({ name: m[1].trim(), id: m[2] });
+  });
+  return out;
+})();
+const VENDOR_BY_ID = Object.fromEntries(VENDORS.map(v => [v.id, v.name]));
+
+/* Chat uses only the lookup tables, not the whole rule book, to keep tokens low */
+function section(mark){
+  const a = RULES.indexOf(mark);
+  if (a < 0) return '';
+  const b = RULES.indexOf('\n====', a + 300);
+  return RULES.slice(a, b > a ? b : Math.min(RULES.length, a + 8000));
+}
+const LIGHT_RULES = [section('VENDOR ID LOOKUP'), section('SITE ID LOOKUP (the STORE'), section('GENERAL RULES')]
+  .filter(Boolean).join('\n\n');
+
+const SITES = [
+  { id:'0001', name:'North Point' }, { id:'0002', name:'Lakeside' },
+  { id:'0003', name:'Westgate' },    { id:'0004', name:'Riverside' }
+];
+const SITE_BY_ID = Object.fromEntries(SITES.map(s => [s.id, s.name]));
+
+/* ---------- output contract ---------- */
+function contract(withDesc){
+  return `
+========================================================================
+OUTPUT CONTRACT — THIS OVERRIDES THE "output only text" INSTRUCTION ABOVE
+========================================================================
+Do NOT produce the .txt lines. A separate program builds the .txt from your
+JSON, so your ONLY job is to READ the invoices accurately and return data.
+
+Return ONE JSON object and nothing else. No markdown fences, no commentary.
+
+{
+  "invoices": [
+    {
+      "vendorName": "name of the SELLER exactly as printed on the invoice",
+      "vendorId": "the ID from the VENDOR ID LOOKUP table, or \\"\\" if unsure",
+      "storeName": "the ship-to / sold-to store name or address as printed",
+      "siteId": "4-digit site ID from the SITE ID LOOKUP, or \\"\\" if unsure",
+      "invoiceRef": "invoice number exactly as printed",
+      "date": "YYYYMMDD",
+      "total": "net total, 2 decimals, e.g. 707.78 (negative allowed)",
+      "items": [ ["ITEM#","QTY","PRICE"${withDesc ? ',"short description"' : ''}] ],
+      "questions": ["anything you would normally STOP and ask about"]
+    }
+  ]
+}
+
+HARD REQUIREMENTS:
+- Apply EVERY vendor-specific ITEM#/QTY/PRICE rule above. They override defaults.
+- Include EVERY line on the invoice in "items", in printed order: normal items,
+  zero-shipped items, returns (negative qty), gratis lines (price 0), invoice-wide
+  discounts (negative price), SALES TAX, FUEL, SHIPPING and other charges.
+  Use the exact literal VINs the rules require (SALES TAX, FUEL, SHIPPING,
+  DISCOUNT, PICKING/DELIVERY CHARGE, MIXED ITEMS, VOLUME ADJ).
+- The sum of qty x price across items MUST equal "total". Add them up before you
+  answer and re-read the invoice if it does not match. If it still does not match,
+  keep the printed figures and explain the gap in "questions".
+- Never invent a vendorId or siteId. If the name or address does not clearly match
+  a lookup row, leave that field "" and add a clear question. Do not guess.
+- If several invoices are in the uploaded files, return one object per invoice.
+- Restaurant Depot cover sheet + stored receipt details = ONE invoice object.
+- ITEM# is copied EXACTLY as printed, character for character, same length. Whatever leading
+  zeros the invoice shows — one, two, three or none — keep exactly that many. Never add a zero
+  that is not printed and never remove one that is:
+      printed 3021    -> "3021"
+      printed 03021   -> "03021"
+      printed 003021  -> "003021"
+      printed 0003021 -> "0003021"
+  Do not pad the number to a fixed width, do not copy a longer number from a different column,
+  and do not reuse the length another vendor uses. Read the Item # column and copy it as it stands.
+- Every item is a SHORT ARRAY, not an object: ITEM# first, then QTY, then PRICE${withDesc ? ', then a short description' : ''}.
+  QTY and PRICE use up to 4 decimals, negative for returns and discounts.
+- Numbers as strings, no currency symbols, no thousands separators, no spaces.
+- Output compact JSON on as few characters as possible: no pretty printing, no
+  indentation, no blank lines, no repeated keys.${withDesc ? '' : ' Do NOT add descriptions.'}
+- Keep "questions" empty unless something genuinely needs a human decision.
+${houseRules()}`;
+}
+
+/* Extra rules the operator types in — added to every conversion */
+function houseRules(){
+  const t = ($('#houseRules') && $('#houseRules').value || '').trim();
+  return t ? '\nHOUSE RULES FROM THE OPERATOR (these override anything above):\n' + t + '\n' : '';
+}
+
+/* ---------- state ---------- */
+const PROVIDERS = {
+  claude: {
+    label:'Anthropic API key', ph:'sk-ant-...', model:'claude-sonnet-5',
+    models:[['claude-sonnet-5','balanced — default'],
+            ['claude-opus-5','most accurate — for poor scans'],
+            ['claude-haiku-4-5-20251001','cheapest and fastest']],
+    hint:'Sonnet handles clean PDFs well. Use Opus for blurry photos or messy scans.',
+    keyHint:'Create it at console.anthropic.com, API Keys. Saved only in this browser.'
+  },
+  other: {
+    label:'API key', ph:'sk-...', model:'gpt-4o',
+    models:[['gpt-4o','OpenAI vision model'],
+            ['gpt-4o-mini','cheaper'],
+            ['openai/gpt-4o','OpenRouter style name']],
+    hint:'Press Load models to see exactly what this key can use.',
+    keyHint:'Works with any OpenAI-compatible service. Set the base URL above as well.'
+  },
+  gemini: {
+    label:'Google AI Studio API key', ph:'AIza... or AQ...', model:'gemini-flash-latest',
+    models:[['gemini-flash-latest','recommended — always current'],
+            ['gemini-2.5-flash','free tier friendly'],
+            ['gemini-2.5-pro','paid keys only'],
+            ['gemini-flash-lite-latest','cheapest']],
+    hint:'Google retires model names often. If one is rejected, press Load models.',
+    keyHint:'Create it at aistudio.google.com, API keys. Saved only in this browser.'
+  }
+};
+const DEFAULTS = { provider:'claude', mode:'each', desc:false };
+const MAX_OUT_START = 32000, MAX_OUT_BIG = 64000;
+const prov = () => (['gemini','other'].includes($('#provider').value) ? $('#provider').value : 'claude');
+const baseUrl = () => ($('#baseUrl').value || '').trim().replace(/\/+$/, '') || 'https://api.openai.com/v1';
+let gemVer = 'v1beta';
+try { gemVer = localStorage.getItem('lm_gemver') || 'v1beta'; } catch(e){}
+function setGemVer(v){ gemVer = v; try { localStorage.setItem('lm_gemver', v); } catch(e){} }
+const gemUrl = (path, ver) => 'https://generativelanguage.googleapis.com/' + (ver || gemVer) + '/' + path +
+  (path.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(apiKey());
+
+/* Google moves models between API versions, so try the other one before giving up */
+async function geminiPost(path, body){
+  const versions = gemVer === 'v1beta' ? ['v1beta','v1'] : ['v1','v1beta'];
+  let firstErr = null;
+  for (const v of versions){
+    const res = await netPost(gemUrl(path, v), { 'content-type':'application/json' }, body);
+    if (res.ok){ if (v !== gemVer) setGemVer(v); return res; }
+    const err = await httpError(res);
+    if (!firstErr) firstErr = err;
+    const retryOther = res.status === 404 || /not found|not supported|unsupported|invalid/i.test(err.raw || '');
+    if (!retryOther) throw err;
+  }
+  throw firstErr;
+}
+const apiKey = () => $('#key').value.trim();
+/* ================================================================
+   COMPANY KEY (optional)
+   Paste ONE key between the quotes below and every teammate who opens
+   this file is connected straight away — they never touch a key.
+   provider: 'gemini' | 'claude' | 'other'
+   Leave key empty to make each person enter their own key instead.
+   Note: anyone who has this file can read the key, so use a key with a
+   spending limit on it and replace it if the file leaks.
+   ================================================================ */
+const BUILT_IN = {
+  key:'',
+  provider:'gemini',
+  model:'gemini-flash-latest',
+  base:''
+};
+
+const PROV_NAME = { claude:'Claude', gemini:'Gemini', other:'OpenAI-compatible provider' };
+let runModel = null;   // set only when the tool falls back because a model is busy
+const modelName = () => runModel || $('#model').value.trim() || PROVIDERS[prov()].model;
+const FALLBACKS = {
+  gemini: ['gemini-flash-latest','gemini-2.5-flash','gemini-flash-lite-latest','gemini-2.5-pro'],
+  claude: ['claude-sonnet-5','claude-haiku-4-5-20251001','claude-opus-5'],
+  other: []
+};
+function nextModel(){
+  const list = FALLBACKS[prov()] || [];
+  const cur = modelName();
+  const i = list.indexOf(cur);
+  return list.find((m, k) => k > i && m !== cur) || list.find(m => m !== cur) || null;
+}
+let files = [];
+let invoices = [];
+let busy = false;
+let uid = 1;
+let tok = { fresh:0, cacheWrite:0, cacheRead:0, out:0, calls:0 };
+let chat = [];
+let chatBusy = false;
+
+/* ---------- helpers ---------- */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num = v => { const n = parseFloat(String(v ?? '').replace(/[^0-9.\-]/g, '')); return isFinite(n) ? n : 0; };
+const f4 = v => num(v).toFixed(4);
+const f2 = v => num(v).toFixed(2);
+const kb = n => n < 1048576 ? (n/1024).toFixed(0)+' KB' : (n/1048576).toFixed(1)+' MB';
+const thou = n => n.toLocaleString('en-US');
+
+function log(msg, cls){
+  if (cls === 'e') lastProblem = msg;
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}) + '  ' + msg;
+  const box = $('#log'); box.appendChild(d); box.scrollTop = box.scrollHeight;
+}
+function setStatus(text, kind){
+  $('#status').textContent = text;
+  $('#dot').className = 'dot' + (kind ? ' ' + kind : '');
+}
+
+/* ---------- timers and progress ---------- */
+function mmss(sec){
+  sec = Math.max(0, Math.round(sec));
+  return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+}
+let prog = { on:false, total:0, done:0, t0:0, iv:null, per:[] };
+let pastAvg = 0;            // average seconds per file from earlier runs
+
+function startProgress(total){
+  prog = { on:true, total, done:0, t0:Date.now(), iv:null, per:[] };
+  const w = $('#progwrap');
+  w.className = 'on';
+  $('#progDl').style.display = 'none';
+  $('#progHide').style.display = 'none';
+  $('#progfill').style.width = '2%';
+  paintProgress();
+  prog.iv = setInterval(paintProgress, 500);
+}
+function paintProgress(){
+  if (!prog.on) return;
+  const elapsed = (Date.now() - prog.t0) / 1000;
+  const left = prog.total - prog.done;
+  const avg = prog.per.length ? prog.per.reduce((a,b) => a+b, 0) / prog.per.length : pastAvg;
+  const lanes = Math.max(1, Math.min(3, left));
+  const eta = avg ? (avg * left) / lanes : 0;
+  $('#progtext').textContent = 'Reading ' + Math.min(prog.done + 1, prog.total) + ' of ' + prog.total + '...';
+  $('#progfill').style.width = Math.max(2, (prog.done / prog.total) * 100) + '%';
+  $('#progTime').textContent = mmss(elapsed) + ' elapsed' +
+    (eta ? ' · about ' + mmss(eta) + ' left' : ' · estimating...');
+}
+function stepProgress(seconds){
+  prog.done++;
+  if (seconds) prog.per.push(seconds);
+  paintProgress();
+}
+function finishProgress(ok, summary){
+  if (prog.iv) clearInterval(prog.iv);
+  const elapsed = (Date.now() - prog.t0) / 1000;
+  if (prog.per.length) pastAvg = prog.per.reduce((a,b) => a+b, 0) / prog.per.length;
+  prog.on = false;
+  const w = $('#progwrap');
+  w.className = 'on ' + (ok ? 'done' : 'fail');
+  $('#progfill').style.width = '100%';
+  $('#progtext').textContent = summary;
+  $('#progTime').textContent = 'took ' + mmss(elapsed);
+  $('#progDl').style.display = invoices.length ? '' : 'none';
+  $('#progHide').style.display = '';
+}
+function progressNote(text){          // used after chat edits
+  const w = $('#progwrap');
+  w.className = 'on done';
+  $('#progfill').style.width = '100%';
+  $('#progtext').textContent = text;
+  $('#progTime').textContent = '';
+  $('#progDl').style.display = invoices.length ? '' : 'none';
+  $('#progHide').style.display = '';
+}
+$('#progHide').addEventListener('click', () => { $('#progwrap').className = ''; });
+$('#progDl').addEventListener('click', () => $('#dlBtn').click());
+
+/* ---------- settings ---------- */
+function applyProviderUI(){
+  const p = PROVIDERS[prov()];
+  $('#baseWrap').style.display = prov() === 'other' ? '' : 'none';
+  $('#keyLabel').textContent = p.label;
+  $('#key').placeholder = p.ph;
+  $('#keyHint').textContent = p.keyHint;
+  $('#modelHint').textContent = p.hint;
+  $('#models').innerHTML = p.models
+    .map(m => '<option value="' + m[0] + '">' + m[1] + '</option>').join('');
+  $('#testOut').textContent = '';
+}
+function loadSettings(){
+  try{
+    $('#provider').value = localStorage.getItem('lm_provider') || DEFAULTS.provider;
+    applyProviderUI();
+    $('#key').value   = localStorage.getItem('lm_key_' + prov()) || '';
+    $('#model').value = localStorage.getItem('lm_model_' + prov()) || PROVIDERS[prov()].model;
+    $('#baseUrl').value = localStorage.getItem('lm_base') || '';
+    $('#mode').value  = localStorage.getItem('lm_mode') || DEFAULTS.mode;
+    $('#descOn').checked = localStorage.getItem('lm_desc') === '1';
+    $('#houseRules').value = localStorage.getItem('lm_house2') !== null
+      ? localStorage.getItem('lm_house2')
+      : 'TEXAS JASMINE (1101): copy the Item # exactly as it appears on the invoice. ' +
+        'Keep the exact number of leading zeros printed there (none, one, two or three) and never add any.';
+  }catch(e){}
+}
+function saveSettings(){
+  try{
+    localStorage.setItem('lm_provider', prov());
+    localStorage.setItem('lm_key_' + prov(), apiKey());
+    localStorage.setItem('lm_model_' + prov(), $('#model').value.trim());
+    localStorage.setItem('lm_base', ($('#baseUrl').value || '').trim());
+    localStorage.setItem('lm_mode', $('#mode').value);
+    localStorage.setItem('lm_desc', $('#descOn').checked ? '1' : '0');
+    localStorage.setItem('lm_house2', $('#houseRules').value);
+  }catch(e){}
+}
+$('#provider').addEventListener('change', () => {
+  localStorage.setItem('lm_provider', prov());
+  applyProviderUI();
+  $('#key').value   = localStorage.getItem('lm_key_' + prov()) || '';
+  $('#model').value = localStorage.getItem('lm_model_' + prov()) || PROVIDERS[prov()].model;
+  log('Switched to ' + PROV_NAME[prov()]);
+  refreshRun();
+});
+['#key','#model','#mode','#descOn','#houseRules','#baseUrl'].forEach(s =>
+  $(s).addEventListener('change', () => { saveSettings(); refreshRun(); }));
+$('#key').addEventListener('input', refreshRun);
+
+/* ============================================================
+   FILES
+   ============================================================ */
+const drop = $('#drop');
+drop.addEventListener('click', () => $('#picker').click());
+$('#picker').addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('on'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('on'); }));
+drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => { e.preventDefault(); if (e.target.closest('#drop')) return; addFiles(e.dataTransfer.files); });
+
+const OK_IMG = ['image/jpeg','image/png','image/gif','image/webp'];
+
+function addFiles(list){
+  const arr = Array.from(list || []);
+  if (!arr.length) return;
+  let queued = 0;
+  arr.forEach(f => {
+    const isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+    const isImg = OK_IMG.includes(f.type);
+    if (!isPdf && !isImg){ log('Skipped, unsupported type: ' + f.name, 'e'); return; }
+    if (f.size > 30 * 1024 * 1024){ log('Skipped, larger than 30 MB: ' + f.name, 'e'); return; }
+    queued++;
+    const rd = new FileReader();
+    rd.onload = () => {
+      files.push({ id: uid++, name: f.name, size: f.size,
+        mime: isPdf ? 'application/pdf' : f.type,
+        b64: String(rd.result).split(',')[1], joinPrev: false });
+      renderFiles();
+    };
+    rd.onerror = () => log('Could not read: ' + f.name, 'e');
+    rd.readAsDataURL(f);
+  });
+  if (queued) log(queued + ' file(s) added');
+}
+
+function renderFiles(){
+  const box = $('#flist');
+  $('#fileCount').textContent = files.length + ' files';
+  if (!files.length){
+    box.innerHTML = '<div class="frow" style="color:#5E7079">No files added</div>';
+    refreshRun(); return;
+  }
+  box.innerHTML = files.map((f, i) => {
+    const pdf = f.mime === 'application/pdf';
+    return `<div class="frow ${f.joinPrev ? 'joined' : ''}">
+      <span class="ficon ${pdf?'pdf':'img'}">${pdf?'PDF':'IMG'}</span>
+      <span class="nm" title="${esc(f.name)}">${esc(f.name)}</span>
+      <span class="sz">${kb(f.size)}</span>
+      <button class="mini ${f.joinPrev?'act':''}" data-act="join" data-i="${i}" ${i===0?'disabled':''}
+        title="Read together with the file above as one invoice">${f.joinPrev?'joined':'+ join'}</button>
+      <button class="mini" data-act="up" data-i="${i}" ${i===0?'disabled':''} title="Move up">&#9650;</button>
+      <button class="mini" data-act="down" data-i="${i}" ${i===files.length-1?'disabled':''} title="Move down">&#9660;</button>
+      <button class="mini" data-act="del" data-i="${i}" title="Remove">&#10005;</button>
+    </div>`;
+  }).join('');
+  refreshRun();
+}
+
+$('#flist').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const i = +b.dataset.i;
+  if (b.dataset.act === 'del') files.splice(i,1);
+  if (b.dataset.act === 'join') files[i].joinPrev = !files[i].joinPrev;
+  if (b.dataset.act === 'up' && i > 0) [files[i-1],files[i]] = [files[i],files[i-1]];
+  if (b.dataset.act === 'down' && i < files.length-1) [files[i+1],files[i]] = [files[i],files[i+1]];
+  if (files[0]) files[0].joinPrev = false;
+  renderFiles();
+});
+$('#clearFiles').addEventListener('click', () => { files = []; renderFiles(); log('File list cleared'); });
+
+function refreshRun(){
+  if ($('#connBadge')) markConnected();
+  const ready = files.length > 0 && apiKey().length > 10 && !busy;
+  $('#runBtn').disabled = !ready;
+  $('#runHint').textContent = busy ? 'Working...'
+    : !apiKey() ? 'Enter your API key in the Connection box.'
+    : !files.length ? 'Add invoice files above.'
+    : groups().length + ' request(s) will be sent.';
+}
+
+function groups(){
+  if ($('#mode').value === 'all') return files.length ? [files.slice()] : [];
+  const g = [];
+  files.forEach((f, i) => {
+    if (i === 0 || !f.joinPrev) g.push([f]);
+    else g[g.length-1].push(f);
+  });
+  return g;
+}
+
+/* ============================================================
+   API — system prompt is cached so repeat requests are cheap
+   ============================================================ */
+function fileBlocksClaude(fileGroup){
+  const content = [];
+  fileGroup.forEach(f => {
+    content.push({ type:'text', text:'FILE: ' + f.name });
+    if (f.mime === 'application/pdf')
+      content.push({ type:'document', source:{ type:'base64', media_type:'application/pdf', data:f.b64 }});
+    else
+      content.push({ type:'image', source:{ type:'base64', media_type:f.mime, data:f.b64 }});
+  });
+  content.push({ type:'text', text:'Read the invoice(s) above and return the JSON object from the OUTPUT CONTRACT. JSON only.' });
+  return content;
+}
+
+/* Claude — the rules block is cached, so repeat requests cost far less */
+async function callClaude(fileGroup, maxOut){
+  const body = {
+    model: modelName(),
+    max_tokens: maxOut,
+    system: [
+      { type:'text', text: RULES, cache_control:{ type:'ephemeral' } },
+      { type:'text', text: contract($('#descOn').checked) }
+    ],
+    messages: [{ role:'user', content: fileBlocksClaude(fileGroup) }]
+  };
+  const res = await netPost('https://api.anthropic.com/v1/messages', {
+    'content-type':'application/json',
+    'x-api-key': apiKey(),
+    'anthropic-version':'2023-06-01',
+    'anthropic-dangerous-direct-browser-access':'true'
+  }, body);
+  if (!res.ok) throw await httpError(res);
+  const data = await res.json();
+  const u = data.usage || {};
+  countTokens({
+    fresh: u.input_tokens || 0,
+    cacheWrite: u.cache_creation_input_tokens || 0,
+    cacheRead: u.cache_read_input_tokens || 0,
+    out: u.output_tokens || 0
+  });
+  return {
+    text: (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n'),
+    truncated: data.stop_reason === 'max_tokens'
+  };
+}
+
+/* Gemini */
+async function callGemini(fileGroup, maxOut){
+  const parts = [];
+  fileGroup.forEach(f => {
+    parts.push({ text:'FILE: ' + f.name });
+    parts.push({ inline_data:{ mime_type:f.mime, data:f.b64 }});
+  });
+  parts.push({ text:'Read the invoice(s) above and return the JSON object from the OUTPUT CONTRACT. JSON only.' });
+
+  const body = {
+    system_instruction:{ parts:[{ text: RULES + '\n' + contract($('#descOn').checked) }] },
+    contents:[{ role:'user', parts }],
+    generationConfig:{ maxOutputTokens: maxOut, temperature: 0, responseMimeType:'application/json' }
+  };
+  const res = await geminiPost('models/' + encodeURIComponent(modelName()) + ':generateContent', body);
+  const data = await res.json();
+  const u = data.usageMetadata || {};
+  const cached = u.cachedContentTokenCount || 0;
+  countTokens({
+    fresh: Math.max(0, (u.promptTokenCount || 0) - cached),
+    cacheWrite: 0, cacheRead: cached,
+    out: u.candidatesTokenCount || 0
+  });
+  const cand = (data.candidates || [])[0];
+  if (!cand){
+    const blocked = data.promptFeedback && data.promptFeedback.blockReason;
+    throw new Error(blocked ? 'Request blocked by Gemini (' + blocked + ')' : 'Gemini returned no answer');
+  }
+  const text = ((cand.content && cand.content.parts) || []).map(x => x.text || '').join('\n');
+  return { text, truncated: cand.finishReason === 'MAX_TOKENS' };
+}
+
+/* OpenAI-compatible services take images, not PDFs, so pages are rendered locally first */
+let pdfLibPromise = null;
+function loadPdfLib(){
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (!pdfLibPromise){
+    pdfLibPromise = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload = () => {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        res(window.pdfjsLib);
+      };
+      s.onerror = () => rej(new Error(
+        'This provider needs the PDF turned into images, and the page reader could not be downloaded. ' +
+        'Connect to the internet once, or use Claude or Gemini, which read PDFs directly.'));
+      document.head.appendChild(s);
+    });
+  }
+  return pdfLibPromise;
+}
+async function pdfPagesToJpeg(f, maxPages){
+  const lib = await loadPdfLib();
+  const bytes = Uint8Array.from(atob(f.b64), c => c.charCodeAt(0));
+  const doc = await lib.getDocument({ data: bytes }).promise;
+  const pages = [];
+  const limit = Math.min(doc.numPages, maxPages || 15);
+  for (let i = 1; i <= limit; i++){
+    const page = await doc.getPage(i);
+    const vp = page.getViewport({ scale: 2 });
+    const cv = document.createElement('canvas');
+    cv.width = vp.width; cv.height = vp.height;
+    await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+    pages.push(cv.toDataURL('image/jpeg', 0.85));
+  }
+  if (doc.numPages > limit) log('Only the first ' + limit + ' pages of ' + f.name + ' were sent', 'e');
+  return pages;
+}
+
+/* Any OpenAI-compatible endpoint: /chat/completions */
+async function callOther(fileGroup, maxOut){
+  const parts = [];
+  for (const f of fileGroup){
+    parts.push({ type:'text', text:'FILE: ' + f.name });
+    if (f.mime === 'application/pdf'){
+      const pages = await pdfPagesToJpeg(f);
+      pages.forEach(url => parts.push({ type:'image_url', image_url:{ url } }));
+    } else {
+      parts.push({ type:'image_url', image_url:{ url:'data:' + f.mime + ';base64,' + f.b64 } });
+    }
+  }
+  parts.push({ type:'text', text:'Read the invoice(s) above and return the JSON object from the OUTPUT CONTRACT. JSON only.' });
+
+  const body = {
+    model: modelName(),
+    max_tokens: maxOut,
+    messages: [
+      { role:'system', content: RULES + '\n' + contract($('#descOn').checked) },
+      { role:'user', content: parts }
+    ],
+    response_format: { type:'json_object' }
+  };
+  let res = await netPost(baseUrl() + '/chat/completions',
+    { 'content-type':'application/json', 'authorization':'Bearer ' + apiKey() }, body);
+  if (!res.ok){
+    const e = await httpError(res);
+    // Some services reject response_format or max_tokens — retry in the plainest form.
+    if (/response_format|max_tokens|unknown|unsupported|invalid/i.test(e.raw || '')){
+      delete body.response_format;
+      body.max_completion_tokens = maxOut; delete body.max_tokens;
+      res = await netPost(baseUrl() + '/chat/completions',
+        { 'content-type':'application/json', 'authorization':'Bearer ' + apiKey() }, body);
+      if (!res.ok) throw await httpError(res);
+    } else throw e;
+  }
+  const data = await res.json();
+  const u = data.usage || {};
+  const cached = (u.prompt_tokens_details && u.prompt_tokens_details.cached_tokens) || 0;
+  countTokens({ fresh: Math.max(0, (u.prompt_tokens || 0) - cached), cacheWrite:0,
+    cacheRead: cached, out: u.completion_tokens || 0 });
+  const ch = (data.choices || [])[0];
+  if (!ch) throw new Error('The provider returned no answer.');
+  return { text: (ch.message && ch.message.content) || '', truncated: ch.finish_reason === 'length' };
+}
+
+function callModel(fileGroup, maxOut){
+  if (prov() === 'gemini') return callGemini(fileGroup, maxOut);
+  if (prov() === 'other')  return callOther(fileGroup, maxOut);
+  return callClaude(fileGroup, maxOut);
+}
+
+/* Every network call goes through these so browser-side blocks get a clear message */
+function netError(e){
+  const msg = String((e && e.message) || e);
+  if (/failed to fetch|networkerror|load failed|cors|blocked/i.test(msg)){
+    const err = new Error(
+      'The browser blocked this request. Usual causes: the file was opened inside Google Drive\u2019s ' +
+      'preview instead of being downloaded, an old browser, or an office firewall. ' +
+      'Download the file, open it in Chrome or Edge, then press Diagnostics.');
+    err.network = true;
+    return err;
+  }
+  return e;
+}
+async function netPost(url, headers, body){
+  try { return await fetch(url, { method:'POST', headers, body: JSON.stringify(body) }); }
+  catch(e){ throw netError(e); }
+}
+async function netGet(url, headers){
+  try { return await fetch(url, { headers }); }
+  catch(e){ throw netError(e); }
+}
+
+/* Readable messages instead of raw status codes */
+async function httpError(res){
+  let msg = '';
+  try {
+    const j = await res.json();
+    msg = (j.error && (j.error.message || j.error.status)) || '';
+  } catch(e){}
+  const e = new Error(friendly(res.status, msg) + (msg ? ' [' + String(msg).slice(0, 220) + ']' : ''));
+  e.status = res.status;
+  e.raw = msg;
+  e.retryable = res.status === 429 || res.status === 408 || res.status >= 500;
+  e.busy = res.status === 503 || res.status === 529 ||
+           /high demand|overloaded|unavailable|try again later|capacity/i.test(msg || '');
+  if (e.busy) e.retryable = true;
+  return e;
+}
+function friendly(status, msg){
+  const m = (msg || '').toLowerCase();
+  if (status === 401 || status === 403 || m.includes('api key') || m.includes('unauthenticated'))
+    return 'API key was rejected. Check the key for this provider.';
+  if (m.includes('billing') || m.includes('free tier') || m.includes('not available in your') || m.includes('paid'))
+    return 'This model needs a paid/billed key. Try gemini-2.5-flash or gemini-flash-latest.';
+  if (status === 404 || m.includes('not found') || m.includes('does not exist') || m.includes('not supported'))
+    return 'This key cannot use the model "' + modelName() + '". Try gemini-flash-latest, or press Load models.';
+  if (status === 429 || m.includes('quota') || m.includes('rate limit'))
+    return 'Rate limit or quota reached. Wait a minute, or add billing to the account.';
+  if (status === 413 || m.includes('too large') || m.includes('exceeds'))
+    return 'File is too large for one request. Split the PDF into fewer pages.';
+  if (m.includes('high demand') || m.includes('overloaded') || m.includes('capacity') || status === 503 || status === 529)
+    return 'The model is busy right now (high demand). Retrying, and switching to a lighter model if it stays busy.';
+  if (status >= 500) return 'The provider is busy or down right now. Try again in a moment.';
+  return msg || ('Request failed with status ' + status);
+}
+
+function parseJson(text){
+  let t = String(text || '').trim();
+  t = t.replace(/^```(?:json)?/i,'').replace(/```$/,'').trim();
+  const a = t.indexOf('{');
+  if (a > 0) t = t.slice(a);
+  const b = t.lastIndexOf('}');
+  try { return JSON.parse(b > 0 ? t.slice(0, b+1) : t); }
+  catch(e){ return salvage(t); }
+}
+
+/* If the answer was cut off, keep every complete invoice we can read */
+function salvage(t){
+  const objs = [];
+  const starts = [];
+  for (let i = 0; i < t.length; i++){
+    if (t[i] === '{') starts.push(i);
+    if (t[i] === '}' && starts.length){
+      const s = starts.pop();
+      if (!starts.length) continue;
+      const frag = t.slice(s, i+1);
+      if (/"invoiceRef"|"vendorId"|"items"/.test(frag)){
+        try { objs.push(JSON.parse(frag)); } catch(e){}
+      }
+    }
+  }
+  if (!objs.length) throw new Error('The answer could not be read as data. Try again, or use a different model.');
+  return { invoices: objs, partial: true };
+}
+
+function countTokens(u){
+  if (!u) return;
+  tok.calls++;
+  tok.fresh      += u.fresh || 0;
+  tok.cacheWrite += u.cacheWrite || 0;
+  tok.cacheRead  += u.cacheRead || 0;
+  tok.out        += u.out || 0;
+  renderTokens();
+}
+function renderTokens(){
+  if (!tok.calls){
+    $('#tokBox').textContent = 'No requests sent yet.';
+    $('#tokBar').textContent = '';
+    return;
+  }
+  $('#tokBox').innerHTML =
+    `Requests: <b>${tok.calls}</b><br>` +
+    `New input: ${thou(tok.fresh)} · cache write: ${thou(tok.cacheWrite)} · cache read: ${thou(tok.cacheRead)}<br>` +
+    `Output: ${thou(tok.out)}`;
+  $('#tokBar').textContent = `${tok.calls} req · ${thou(tok.cacheRead)} cached · ${thou(tok.out)} out`;
+}
+$('#resetTok').addEventListener('click', () => { tok = {fresh:0,cacheWrite:0,cacheRead:0,out:0,calls:0}; renderTokens(); });
+
+/* ============================================================
+   RUN
+   ============================================================ */
+$('#runBtn').addEventListener('click', run);
+
+async function run(){
+  const gs = groups();
+  if (!gs.length) return;
+  busy = true; refreshRun();
+  runModel = null;
+  setStatus('Reading invoices...', 'busy');
+  startProgress(gs.length);
+  log('Convert started — ' + gs.length + ' request(s)');
+
+  const results = new Array(gs.length);
+  let done = 0, failed = 0;
+
+  async function one(i){
+    const names = gs[i].map(f => f.name).join(' + ');
+    const started = Date.now();
+    let maxOut = MAX_OUT_START;
+    const bytes = gs[i].reduce((a, f) => a + f.size, 0);
+    if (prov() === 'gemini' && bytes > 14 * 1024 * 1024){
+      failed++; results[i] = [];
+      log('Failed: ' + names + ' — too large for one Gemini request. Split the PDF or switch to Claude.', 'e');
+      done++; stepProgress(0); return;
+    }
+    try{
+      let parsed = null, lastErr = null;
+      const MAX_TRIES = 6;
+      for (let attempt = 1; attempt <= MAX_TRIES && !parsed; attempt++){
+        try{
+          const r = await callModel(gs[i], maxOut);
+          if (r.truncated){
+            if (maxOut < MAX_OUT_BIG){
+              maxOut = MAX_OUT_BIG;
+              log('Long invoice, reading again with a bigger budget: ' + names);
+              continue;
+            }
+            // Last resort: keep whatever complete invoices came back.
+            parsed = parseJson(r.text);
+            log('Very long invoice — check ' + names + ' line by line before downloading.', 'e');
+          } else {
+            parsed = parseJson(r.text);
+          }
+          lastErr = null;
+        }catch(e){
+          lastErr = e;
+          if (/max_tokens|maxOutputTokens|greater than|too large/i.test(e.raw || e.message || '') && maxOut > 8192){
+            maxOut = 8192;              // model allows a smaller ceiling
+            continue;
+          }
+          if (attempt < MAX_TRIES && (e.retryable || /could not be read/i.test(e.message))){
+            // Busy model: wait longer each time, and after two tries move to a lighter model.
+            const waits = e.busy ? [3000, 8000, 15000, 25000, 35000] : [1500, 3000, 4500, 6000, 8000];
+            const wait = waits[Math.min(attempt - 1, waits.length - 1)];
+            if (e.busy && attempt >= 2 && !runModel){
+              const alt = nextModel();
+              if (alt){
+                runModel = alt;
+                log('Model busy — switching to ' + alt + ' for this batch', 'e');
+              }
+            }
+            log('Busy, retry ' + attempt + ' of ' + MAX_TRIES + ' in ' + Math.round(wait/1000) + 's: ' + names);
+            await new Promise(r => setTimeout(r, wait));
+            continue;
+          }
+          break;
+        }
+      }
+      if (!parsed) throw lastErr || new Error('No answer from the model');
+      const list = Array.isArray(parsed.invoices) ? parsed.invoices : [];
+      if (!list.length) throw new Error('No invoice was found in this file');
+      results[i] = list.map(inv => normalize(inv, names, parsed.partial));
+      log('Done: ' + names + ' — ' + list.length + ' invoice(s)', 's');
+    }catch(e){
+      failed++; results[i] = [];
+      log('Failed: ' + names + ' — ' + e.message, 'e');
+    }
+    done++;
+    stepProgress((Date.now() - started) / 1000);
+    setStatus('Reading ' + done + ' of ' + gs.length + '...', 'busy');
+  }
+
+  // First request alone so the rules get cached, then run the rest in parallel.
+  await one(0);
+  let cursor = 1;
+  async function worker(){ while (cursor < gs.length) await one(cursor++); }
+  await Promise.all(Array.from({ length: Math.min(3, Math.max(0, gs.length - 1)) }, worker));
+
+  results.forEach(r => { if (r) invoices = invoices.concat(r); });
+  busy = false; refreshRun();
+  renderInvoices();
+  setStatus(failed ? failed + ' request(s) failed — see Activity' : 'Convert finished', failed ? 'err' : 'ok');
+  if (runModel) log('This batch finished on ' + runModel + ' (your chosen model was busy)');
+  finishProgress(!failed, (failed
+    ? failed + ' of ' + gs.length + ' failed — ' + invoices.length + ' invoice(s) ready'
+    : 'Done — ' + invoices.length + ' invoice(s) ready') + (runModel ? ' · used ' + runModel : ''));
+  runModel = null;
+  if (invoices.length) showTab('out');
+  raiseQuestions();
+}
+
+function normalize(inv, src, partial){
+  const items = Array.isArray(inv.items) ? inv.items : [];
+  const cell = (it, k, i) => Array.isArray(it) ? it[i] : it[k];
+  return {
+    id: uid++,
+    vendorId: String(inv.vendorId || '').trim(),
+    vendorName: String(inv.vendorName || '').trim(),
+    siteId: String(inv.siteId || '').trim(),
+    storeName: String(inv.storeName || '').trim(),
+    invoiceRef: String(inv.invoiceRef || '').trim(),
+    date: String(inv.date || '').replace(/\D/g,''),
+    total: f2(inv.total),
+    questions: (Array.isArray(inv.questions) ? inv.questions.filter(Boolean) : [])
+      .concat(partial ? ['The answer was cut off, so some lines may be missing. Check this invoice against the paper copy.'] : []),
+    src: src || 'manual entry',
+    items: items.map(it => ({
+      vin: String(cell(it,'vin',0) ?? '').trim(),
+      qty: f4(cell(it,'qty',1)),
+      price: f4(cell(it,'price',2)),
+      desc: String(cell(it,'desc',3) ?? '').trim()
+    }))
+  };
+}
+
+/* ============================================================
+   CHECKS
+   ============================================================ */
+function check(inv){
+  const issues = [];
+  if (!inv.vendorId) issues.push('Vendor is missing — pick one from the list.');
+  else if (!VENDOR_BY_ID[inv.vendorId]) issues.push('Vendor ID ' + inv.vendorId + ' is not in the lookup table.');
+  if (!inv.siteId) issues.push('Store is missing — pick one from the list.');
+  else if (!SITE_BY_ID[inv.siteId]) issues.push('Site ID ' + inv.siteId + ' is not in the lookup table.');
+  if (!/^\d{8}$/.test(inv.date)) issues.push('Date must be 8 digits, YYYYMMDD.');
+  if (!inv.invoiceRef) issues.push('Invoice number is missing.');
+  if (!inv.items.length) issues.push('This invoice has no line items.');
+  inv.items.forEach((it, i) => { if (!it.vin) issues.push('Line ' + (i+1) + ' has no item number.'); });
+
+  const sum = inv.items.reduce((a, it) => a + num(it.qty) * num(it.price), 0);
+  const diff = Math.round((sum - num(inv.total)) * 100) / 100;
+  if (Math.abs(diff) > 0.02)
+    issues.push('Line items add up to ' + sum.toFixed(2) + ' but the invoice total is ' +
+      num(inv.total).toFixed(2) + ' (off by ' + (diff > 0 ? '+' : '') + diff.toFixed(2) + ').');
+  inv.questions.forEach(q => issues.push('Needs a decision: ' + q));
+  return { issues, sum, diff, ok: issues.length === 0 };
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function vendorOptions(sel){
+  const opts = ['<option value="">— select vendor —</option>'];
+  VENDORS.slice().sort((a,b) => a.name.localeCompare(b.name)).forEach(v =>
+    opts.push(`<option value="${v.id}" ${v.id===sel?'selected':''}>${esc(v.name)} — ${v.id}</option>`));
+  if (sel && !VENDOR_BY_ID[sel]) opts.push(`<option value="${esc(sel)}" selected>${esc(sel)} (not in table)</option>`);
+  return opts.join('');
+}
+function siteOptions(sel){
+  const opts = ['<option value="">— select store —</option>'];
+  SITES.forEach(s => opts.push(`<option value="${s.id}" ${s.id===sel?'selected':''}>${s.name} — ${s.id}</option>`));
+  if (sel && !SITE_BY_ID[sel]) opts.push(`<option value="${esc(sel)}" selected>${esc(sel)} (not in table)</option>`);
+  return opts.join('');
+}
+
+function renderInvoices(){
+  const box = $('#invList');
+  $('#invCount').textContent = invoices.length;
+  if (!invoices.length){
+    box.innerHTML = `<div class="empty"><h3>Nothing converted yet</h3>
+      <p>Add invoice files on the left and press <b>Convert</b>.<br>
+      Each invoice will show up here as a table you can check, fix and download.</p></div>`;
+    buildOutput(); return;
+  }
+  box.innerHTML = invoices.map((inv, i) => invCard(inv, i)).join('');
+  buildOutput();
+}
+
+function invCard(inv, idx){
+  const c = check(inv);
+  const hard = Math.abs(c.diff) > 0.02 || !inv.vendorId || !inv.siteId;
+  const badge = c.ok ? '<span class="badge ok">OK</span>'
+    : hard ? '<span class="badge bad">CHECK</span>' : '<span class="badge warn">REVIEW</span>';
+  const vname = VENDOR_BY_ID[inv.vendorId] || inv.vendorName || 'Unknown vendor';
+  const sname = SITE_BY_ID[inv.siteId] || inv.storeName || '';
+
+  const rows = inv.items.map((it, j) => `
+    <tr class="${num(it.qty)<0||num(it.price)<0?'neg':''}">
+      <td style="width:26px;color:#8A98A8;text-align:right;padding-right:6px">${j+1}</td>
+      <td style="width:190px"><input value="${esc(it.vin)}" data-i="${idx}" data-j="${j}" data-f="vin"></td>
+      <td style="width:110px"><input class="num" value="${esc(it.qty)}" data-i="${idx}" data-j="${j}" data-f="qty"></td>
+      <td style="width:110px"><input class="num" value="${esc(it.price)}" data-i="${idx}" data-j="${j}" data-f="price"></td>
+      <td class="ext" style="width:95px">${(num(it.qty)*num(it.price)).toFixed(2)}</td>
+      <td><input value="${esc(it.desc)}" data-i="${idx}" data-j="${j}" data-f="desc" placeholder="—" style="color:#5E7079"></td>
+      <td style="width:26px"><button class="mini" data-act="delrow" data-i="${idx}" data-j="${j}" title="Delete line">&#10005;</button></td>
+    </tr>`).join('');
+
+  return `<div class="inv">
+    <div class="inv-head">
+      ${badge}
+      <span class="ttl">#${idx+1} · ${esc(vname)} · ${esc(inv.invoiceRef || 'no invoice number')} · ${esc(sname)}</span>
+      <span style="font-size:10.5px;color:#5E7079" title="${esc(inv.src)}">${esc(inv.src)}</span>
+      <button class="mini" data-act="ask" data-i="${idx}" title="Ask the assistant about this invoice">Ask</button>
+      <button class="mini" data-act="delinv" data-i="${idx}">Remove</button>
+    </div>
+    <div class="grid">
+      <div class="field"><label>Vendor</label>
+        <select data-i="${idx}" data-f="vendorId">${vendorOptions(inv.vendorId)}</select></div>
+      <div class="field"><label>Store</label>
+        <select data-i="${idx}" data-f="siteId">${siteOptions(inv.siteId)}</select></div>
+      <div class="field"><label>Invoice number</label>
+        <input value="${esc(inv.invoiceRef)}" data-i="${idx}" data-f="invoiceRef"></div>
+      <div class="field"><label>Date (YYYYMMDD)</label>
+        <input value="${esc(inv.date)}" data-i="${idx}" data-f="date" maxlength="8"></div>
+      <div class="field"><label>Net total</label>
+        <input value="${esc(inv.total)}" data-i="${idx}" data-f="total" style="text-align:right;font-family:var(--mono)"></div>
+    </div>
+    <table class="items">
+      <thead><tr><th></th><th>Item number</th><th style="text-align:right">Qty</th>
+        <th style="text-align:right">Price</th><th style="text-align:right">Line</th>
+        <th>Description (for checking only)</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="tfoot">
+      <button class="mini" data-act="addrow" data-i="${idx}">+ Line</button>
+      <div class="spacer"></div>
+      <span class="calc">Lines: ${inv.items.length} &nbsp;|&nbsp; Sum: ${c.sum.toFixed(2)} &nbsp;|&nbsp; Invoice: ${num(inv.total).toFixed(2)}
+        &nbsp;|&nbsp; <b style="color:${Math.abs(c.diff)>0.02?'var(--bad)':'var(--ok)'}">Difference: ${c.diff.toFixed(2)}</b></span>
+    </div>
+    ${c.issues.length ? `<div class="issues"><b>Needs attention:</b><ul>${c.issues.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul></div>` : ''}
+  </div>`;
+}
+
+$('#invList').addEventListener('input', e => {
+  const el = e.target;
+  if (!el.dataset || el.dataset.i === undefined) return;
+  const inv = invoices[+el.dataset.i]; if (!inv) return;
+  if (el.dataset.j !== undefined) inv.items[+el.dataset.j][el.dataset.f] = el.value;
+  else inv[el.dataset.f] = el.value;
+  markDirty();
+  buildOutput(); softRefresh(+el.dataset.i);
+});
+$('#invList').addEventListener('change', e => {
+  const el = e.target;
+  if (!el.dataset || el.dataset.i === undefined || el.tagName !== 'SELECT') return;
+  const inv = invoices[+el.dataset.i]; if (!inv) return;
+  inv[el.dataset.f] = el.value;
+  if (el.dataset.f === 'vendorId') inv.vendorName = VENDOR_BY_ID[el.value] || inv.vendorName;
+  if (el.dataset.f === 'siteId') inv.storeName = SITE_BY_ID[el.value] || inv.storeName;
+  markDirty();
+  renderInvoices();
+});
+$('#invList').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  const i = +b.dataset.i;
+  if (b.dataset.act === 'ask'){ askAbout(i); return; }
+  if (b.dataset.act === 'delinv') invoices.splice(i,1);
+  if (b.dataset.act === 'delrow') invoices[i].items.splice(+b.dataset.j,1);
+  if (b.dataset.act === 'addrow') invoices[i].items.push({vin:'',qty:'1.0000',price:'0.0000',desc:''});
+  renderInvoices();
+});
+
+function softRefresh(idx){
+  const card = $('#invList').children[idx]; if (!card) return;
+  const inv = invoices[idx], c = check(inv);
+  const foot = card.querySelector('.tfoot .calc');
+  if (foot) foot.innerHTML = `Lines: ${inv.items.length} &nbsp;|&nbsp; Sum: ${c.sum.toFixed(2)} &nbsp;|&nbsp; Invoice: ${num(inv.total).toFixed(2)}
+    &nbsp;|&nbsp; <b style="color:${Math.abs(c.diff)>0.02?'var(--bad)':'var(--ok)'}">Difference: ${c.diff.toFixed(2)}</b>`;
+  const badge = card.querySelector('.badge');
+  if (badge){
+    const hard = Math.abs(c.diff) > 0.02 || !inv.vendorId || !inv.siteId;
+    badge.className = 'badge ' + (c.ok ? 'ok' : hard ? 'bad' : 'warn');
+    badge.textContent = c.ok ? 'OK' : hard ? 'CHECK' : 'REVIEW';
+  }
+  countWarnings();
+}
+
+$('#addInv').addEventListener('click', () => {
+  invoices.push(normalize({ items:[{vin:'',qty:'1.0000',price:'0.0000'}] }, 'manual entry'));
+  renderInvoices();
+});
+$('#clearInv').addEventListener('click', () => {
+  if (invoices.length && !confirm('Remove all invoices from the list?')) return;
+  invoices = []; renderInvoices(); log('Invoice list cleared');
+});
+
+/* ---------- saving edits ---------- */
+let dirty = false;
+function markDirty(){
+  dirty = true;
+  const b = $('#saveBtn');
+  b.className = 'mini dirty';
+  b.textContent = 'Save changes';
+}
+function saveChanges(quiet){
+  renderInvoices();                 // picks up whatever is typed in the boxes
+  const text = buildOutput();
+  dirty = false;
+  const b = $('#saveBtn');
+  b.className = 'mini saved';
+  b.textContent = 'Saved';
+  setTimeout(() => { if (!dirty){ b.className = 'mini act'; b.textContent = 'Save changes'; } }, 2500);
+  const bad = invoices.filter(i => !check(i).ok).length;
+  if (!quiet){
+    progressNote('Saved — ' + invoices.length + ' invoice(s), ' + text.split('\n').filter(Boolean).length +
+      ' lines' + (bad ? ' · ' + bad + ' still need attention' : ' · all checks passed'));
+    setStatus('Changes saved — download the file again', 'ok');
+    log('Changes saved into the output file', 's');
+  }
+  return text;
+}
+$('#saveBtn').addEventListener('click', () => saveChanges(false));
+$('#reDl').addEventListener('click', () => { saveChanges(true); $('#dlBtn').click(); });
+
+/* ---------- bulk edits (no tokens used) ---------- */
+let undoStack = [];
+function snapshotForUndo(label){
+  undoStack.push({ label, data: JSON.parse(JSON.stringify(invoices)) });
+  if (undoStack.length > 10) undoStack.shift();
+  $('#undoBtn').disabled = false;
+}
+function isNumericVin(v){ return /^\d+$/.test(String(v || '').trim()); }
+
+function bulkVin(fn, label){
+  if (!invoices.length) return;
+  snapshotForUndo(label);
+  let n = 0;
+  invoices.forEach(inv => inv.items.forEach(it => {
+    if (!isNumericVin(it.vin)) return;      // leave SALES TAX, FUEL etc. alone
+    const before = it.vin;
+    it.vin = fn(it.vin);
+    if (it.vin !== before) n++;
+  }));
+  renderInvoices();
+  log(label + ' — ' + n + ' item number(s) changed', 's');
+  saveChanges(true);
+  setStatus(label + ': ' + n + ' item number(s) changed — saved', 'ok');
+  progressNote(label + ' — ' + n + ' item number(s) changed · saved');
+}
+$('#stripZeros').addEventListener('click', () => {
+  if (!confirm('The import rules say item numbers keep the digits exactly as printed (00706 stays 00706).\n\nRemove leading zeros anyway?')) return;
+  bulkVin(v => v.replace(/^0+(?=\d)/, ''), 'Stripped leading zeros');
+});
+$('#padZeros').addEventListener('click', () =>
+  bulkVin(v => v.replace(/^0+(?=\d)/, '').padStart(6, '0'), 'Padded to 6 digits'));
+$('#undoBtn').addEventListener('click', () => {
+  const last = undoStack.pop();
+  if (!last) return;
+  invoices = last.data;
+  $('#undoBtn').disabled = !undoStack.length;
+  renderInvoices();
+  progressNote('Undone: ' + last.label);
+  log('Undone: ' + last.label);
+  setStatus('Undone: ' + last.label, 'ok');
+});
+
+function countWarnings(){
+  const bad = invoices.filter(i => !check(i).ok).length;
+  $('#warnCount').textContent = bad ? bad + ' invoice(s) need attention' : (invoices.length ? 'All checks passed' : '');
+  $('#warnCount').style.color = bad ? 'var(--bad)' : 'var(--ok)';
+}
+
+/* ============================================================
+   OUTPUT — format is built here, so it is always exact
+   ============================================================ */
+const HDR_TAIL = ',,,,,,,,,,,,,,,,,,,,,,,,,,,';
+const ITEM_TAIL = ',,,,';
+
+function buildOutput(){
+  const lines = [], order = [], byVendor = new Map();
+  invoices.forEach(inv => {
+    const v = inv.vendorId || 'UNKNOWN';
+    if (!byVendor.has(v)){ byVendor.set(v, []); order.push(v); }
+    byVendor.get(v).push(inv);
+  });
+  order.forEach(v => {
+    lines.push('0000,MI,' + v);
+    byVendor.get(v).forEach(inv => {
+      lines.push('1200,' + inv.date + ',' + inv.siteId + ',' + inv.invoiceRef + ',I,,' + f2(inv.total) + HDR_TAIL);
+      inv.items.forEach(it => lines.push('1202,' + it.vin + ',,' + f4(it.qty) + ',' + f4(it.price) + ITEM_TAIL));
+    });
+  });
+  const text = lines.join('\n');
+  $('#out').value = text;
+  $('#outMeta').textContent = lines.length + ' lines · ' + invoices.length + ' invoices · ' +
+    order.length + ' vendors · built ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  countWarnings();
+  return text;
+}
+
+function toggleOut(show){
+  const w = $('#outwrap');
+  const open = show !== undefined ? show : w.classList.contains('collapsed');
+  w.classList.toggle('collapsed', !open);
+  $('#toggleOut').textContent = open ? 'Hide' : 'Show';
+}
+$('#toggleOut').addEventListener('click', () => toggleOut());
+
+function showTab(which){
+  const w = $('#outwrap');
+  w.classList.toggle('chat', which === 'chat');
+  $('#tabOut').classList.toggle('on', which !== 'chat');
+  $('#tabChat').classList.toggle('on', which === 'chat');
+  $('#outMeta').style.display = which === 'chat' ? 'none' : '';
+  buildOutput();                       // always rebuild from the current invoices
+  toggleOut(true);
+  if (which === 'chat') setTimeout(() => $('#chatIn').focus(), 30);
+}
+$('#tabOut').addEventListener('click', () => showTab('out'));
+$('#tabChat').addEventListener('click', () => showTab('chat'));
+
+$('#copyBtn').addEventListener('click', async () => {
+  const t = buildOutput();
+  if (!t){ setStatus('There is nothing to copy', 'err'); return; }
+  try { await navigator.clipboard.writeText(t); setStatus('Output copied', 'ok'); }
+  catch(e){ $('#out').select(); document.execCommand('copy'); setStatus('Output copied', 'ok'); }
+});
+
+$('#dlBtn').addEventListener('click', () => {
+  renderInvoices();          // pull in any half-typed edit still on screen
+  const t = buildOutput();
+  if (!t){ setStatus('There is nothing to download yet', 'err'); return; }
+  const bad = invoices.filter(i => !check(i).ok).length;
+  if (bad && !confirm(bad + ' invoice(s) still need attention. Download anyway?')) return;
+  const d = new Date(), p = n => String(n).padStart(2,'0');
+  const name = 'invoices_' + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + '_' +
+               p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()) + '.txt';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([t], { type:'text/plain;charset=utf-8' }));
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  log('Downloaded ' + name, 's');
+  setStatus('Downloaded ' + name, 'ok');
+});
+
+/* ============================================================
+   ASSISTANT CHAT
+   Sends only the lookup tables plus the current invoice data —
+   never the full rule book — so follow-up questions stay cheap.
+   ============================================================ */
+function chatSystem(){
+  return `You are the assistant built into an invoice conversion tool used by a convenience store
+back office. The operator uploads supplier invoices, the tool extracts them, and you help the
+operator understand and correct the extracted data. Be brief, practical and plain-spoken.
+
+Reference tables and general rules:
+${LIGHT_RULES}
+
+Return ONE JSON object and nothing else:
+{"reply":"short answer or question for the operator","updates":[{"n":1,"siteId":"0024"}]}
+
+- ALWAYS return "updates" when the operator asks for a change you can carry out. Never answer with a
+  description of what should be done while leaving the data untouched — apply it.
+- "n" is the invoice number shown in the tool (#1, #2 ...). Use "n":"all" to change every invoice.
+- An update may contain:
+  * whole-invoice fields that change: vendorId, siteId, invoiceRef, date (YYYYMMDD), total
+  * "items": the COMPLETE corrected list as [ITEM#,QTY,PRICE] arrays
+  * "line": a single line number (1 = first row) with any of "vin", "qty", "price" to change just that row
+  * "op": a bulk operation on item numbers — "stripLeadingZeros" (003021 becomes 3021) or
+    "padLeadingZeros" with "width" (3021 becomes 003021). Bulk operations skip text codes like SALES TAX.
+- Prefer "op" or "line" over resending the whole items list — it is shorter and safer.
+- Never invent a vendor ID or site ID that is not in the tables above.
+- If something is still unclear, leave "updates" out and ask one short question in "reply".
+- Line items must add up to the invoice total. If the operator's fix breaks that, say so.
+- If the operator says the lines do not balance, work out what is missing (a tax line, a fuel or
+  delivery charge, an invoice-wide discount as a negative line, a missed or duplicated row, or a
+  wrong price) and return the correction in "updates". Say in "reply" what you changed and what the
+  new total of the lines is. Only change the header total if the operator tells you the printed total.`;
+}
+
+function snapshot(){
+  return JSON.stringify(invoices.map((inv, i) => ({
+    n: i + 1,
+    vendorId: inv.vendorId, vendor: inv.vendorName,
+    siteId: inv.siteId, store: inv.storeName,
+    ref: inv.invoiceRef, date: inv.date, total: inv.total,
+    items: inv.items.map(it => [it.vin, it.qty, it.price]),
+    issues: check(inv).issues,
+    file: inv.src
+  })));
+}
+
+function pushMsg(role, text){
+  chat.push({ role, text });
+  renderChat();
+}
+function renderChat(){
+  const box = $('#chatLog');
+  if (!chat.length){
+    box.innerHTML = '<div class="msg sys">Ask anything about the invoices on screen — or tell me what to fix.</div>';
+    return;
+  }
+  box.innerHTML = chat.map(m =>
+    '<div class="msg ' + (m.role === 'user' ? 'me' : m.role === 'sys' ? 'sys' : 'bot') + '">' +
+    esc(m.text) + '</div>').join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+async function chatCall(userText){
+  const history = chat.filter(m => m.role === 'user' || m.role === 'assistant').slice(-8);
+  const lastUser = 'CURRENT INVOICES IN THE TOOL:\n' + snapshot() + '\n\nOPERATOR: ' + userText;
+
+  if (prov() === 'gemini'){
+    const contents = history.slice(0, -1).map(m => ({
+      role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }]
+    }));
+    contents.push({ role:'user', parts:[{ text: lastUser }] });
+    const res = await geminiPost('models/' + encodeURIComponent(modelName()) + ':generateContent', {
+      system_instruction:{ parts:[{ text: chatSystem() }] },
+      contents,
+      generationConfig:{ maxOutputTokens: 4000, temperature: 0, responseMimeType:'application/json' }
+    });
+    const data = await res.json();
+    const u = data.usageMetadata || {};
+    const cached = u.cachedContentTokenCount || 0;
+    countTokens({ fresh: Math.max(0, (u.promptTokenCount || 0) - cached), cacheWrite:0,
+      cacheRead: cached, out: u.candidatesTokenCount || 0 });
+    const cand = (data.candidates || [])[0];
+    if (!cand) throw new Error('No answer from Gemini');
+    return ((cand.content && cand.content.parts) || []).map(x => x.text || '').join('\n');
+  }
+
+  const msgs = history.slice(0, -1).map(m => ({ role: m.role, content: m.text }));
+  msgs.push({ role:'user', content: lastUser });
+
+  if (prov() === 'other'){
+    const res = await netPost(baseUrl() + '/chat/completions',
+      { 'content-type':'application/json', 'authorization':'Bearer ' + apiKey() },
+      { model: modelName(), max_tokens: 4000,
+        messages: [{ role:'system', content: chatSystem() }].concat(msgs) });
+    if (!res.ok) throw await httpError(res);
+    const d = await res.json();
+    const uu = d.usage || {};
+    const cc = (uu.prompt_tokens_details && uu.prompt_tokens_details.cached_tokens) || 0;
+    countTokens({ fresh: Math.max(0, (uu.prompt_tokens || 0) - cc), cacheWrite:0,
+      cacheRead: cc, out: uu.completion_tokens || 0 });
+    const c0 = (d.choices || [])[0];
+    return (c0 && c0.message && c0.message.content) || '';
+  }
+  const res = await netPost('https://api.anthropic.com/v1/messages',
+    { 'content-type':'application/json', 'x-api-key': apiKey(),
+      'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+    ({
+      model: modelName(), max_tokens: 4000,
+      system: [{ type:'text', text: chatSystem(), cache_control:{ type:'ephemeral' } }],
+      messages: msgs
+    }));
+  if (!res.ok) throw await httpError(res);
+  const data = await res.json();
+  const u = data.usage || {};
+  countTokens({ fresh: u.input_tokens || 0, cacheWrite: u.cache_creation_input_tokens || 0,
+    cacheRead: u.cache_read_input_tokens || 0, out: u.output_tokens || 0 });
+  return (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+}
+
+function applyUpdates(updates){
+  if (!Array.isArray(updates) || !updates.length) return 0;
+  snapshotForUndo('Assistant change');
+  let n = 0;
+  updates.forEach(up => {
+    const all = String(up.n).toLowerCase() === 'all' || up.n === '*';
+    const targets = all ? invoices.map((_, k) => k) : [(parseInt(up.n, 10) || 0) - 1];
+    targets.forEach(i => { n += applyOne(invoices[i], up); });
+  });
+  if (n) renderInvoices(); else undoStack.pop();
+  $('#undoBtn').disabled = !undoStack.length;
+  return n;
+}
+
+function applyOne(inv, up){
+  {
+    if (!inv) return 0;
+    ['vendorId','siteId','invoiceRef','date','total'].forEach(f => {
+      if (up[f] !== undefined && up[f] !== null && String(up[f]).length){
+        inv[f] = f === 'total' ? f2(up[f]) : String(up[f]).trim();
+      }
+    });
+    if (up.vendorId && VENDOR_BY_ID[inv.vendorId]) inv.vendorName = VENDOR_BY_ID[inv.vendorId];
+    if (up.siteId && SITE_BY_ID[inv.siteId]) inv.storeName = SITE_BY_ID[inv.siteId];
+    if (Array.isArray(up.items) && up.items.length){
+      inv.items = up.items.map(it => ({
+        vin: String(Array.isArray(it) ? it[0] : it.vin ?? '').trim(),
+        qty: f4(Array.isArray(it) ? it[1] : it.qty),
+        price: f4(Array.isArray(it) ? it[2] : it.price),
+        desc: String(Array.isArray(it) ? (it[3] ?? '') : it.desc ?? '').trim()
+      }));
+    }
+    if (up.op === 'stripLeadingZeros'){
+      inv.items.forEach(it => { if (isNumericVin(it.vin)) it.vin = it.vin.replace(/^0+(?=\d)/, ''); });
+    }
+    if (up.op === 'padLeadingZeros'){
+      const w = parseInt(up.width, 10) || 6;
+      inv.items.forEach(it => {
+        if (isNumericVin(it.vin)) it.vin = it.vin.replace(/^0+(?=\d)/, '').padStart(w, '0');
+      });
+    }
+    if (up.line !== undefined && up.line !== null){
+      const row = inv.items[(parseInt(up.line, 10) || 0) - 1];
+      if (row){
+        if (up.vin !== undefined && String(up.vin).length) row.vin = String(up.vin).trim();
+        if (up.qty !== undefined && String(up.qty).length) row.qty = f4(up.qty);
+        if (up.price !== undefined && String(up.price).length) row.price = f4(up.price);
+      }
+    }
+    if (up.clearQuestions !== false) inv.questions = [];
+    return 1;
+  }
+}
+
+let chatTimes = [];
+function startChatTimer(){
+  const t0 = Date.now();
+  const avg = chatTimes.length ? chatTimes.reduce((a,b) => a+b, 0) / chatTimes.length : 0;
+  chat.push({ role:'sys', text:'Working... 0:00' });
+  const idx = chat.length - 1;
+  renderChat();
+  const paint = () => {
+    const s = (Date.now() - t0) / 1000;
+    const left = avg ? Math.max(0, avg - s) : 0;
+    chat[idx].text = 'Working... ' + mmss(s) +
+      (avg ? (left > 0 ? ' · about ' + mmss(left) + ' left' : ' · almost there') : '');
+    renderChat();
+  };
+  const iv = setInterval(paint, 1000);
+  return { stop(){
+    clearInterval(iv);
+    const s = (Date.now() - t0) / 1000;
+    chatTimes.push(s); if (chatTimes.length > 8) chatTimes.shift();
+    chat.splice(idx, 1); renderChat();
+    return s;
+  }};
+}
+
+async function sendChat(){
+  const el = $('#chatIn');
+  const text = el.value.trim();
+  if (!text || chatBusy) return;
+  if (!apiKey()){ pushMsg('sys', 'Enter an API key in the Connection box first.'); return; }
+  el.value = '';
+  pushMsg('user', text);
+  chatBusy = true;
+  $('#chatSend').disabled = true;
+  const timer = startChatTimer();
+  let secs = 0;
+  try{
+    const raw = await chatCall(text);
+    secs = timer.stop();
+    let reply = '', updates = [];
+    try{
+      const j = parseJson(raw);
+      reply = String(j.reply || '').trim();
+      updates = j.updates || [];
+    }catch(e){ reply = String(raw || '').trim(); }
+    const changed = applyUpdates(updates);
+    pushMsg('assistant', reply || 'Done.');
+    if (changed){
+      saveChanges(true);
+      pushMsg('sys', changed + ' invoice(s) updated in ' + mmss(secs) +
+        ' and saved. Press Download .txt for the corrected file.');
+      progressNote('Saved — ' + changed + ' invoice(s) changed by the assistant');
+    } else {
+      pushMsg('sys', 'Answered in ' + mmss(secs));
+    }
+  }catch(e){
+    timer.stop();
+    pushMsg('sys', 'Failed: ' + e.message);
+  }
+  chatBusy = false;
+  $('#chatSend').disabled = false;
+  renderChat();
+}
+$('#chatSend').addEventListener('click', sendChat);
+$('#chatIn').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); }
+});
+
+function askAbout(i){
+  const inv = invoices[i];
+  showTab('chat');
+  const iss = check(inv).issues;
+  $('#chatIn').value = 'Invoice #' + (i + 1) + ': ' + (iss.length ? '' : 'my question is ');
+  $('#chatIn').focus();
+}
+
+/* After a conversion, put any open questions into the chat */
+function raiseQuestions(){
+  const open = invoices.map((inv, i) => ({ inv, i, c: check(inv) })).filter(x => !x.c.ok);
+  if (!open.length) return;
+  const lines = open.map(x => {
+    const name = VENDOR_BY_ID[x.inv.vendorId] || x.inv.vendorName || 'unknown vendor';
+    return '#' + (x.i + 1) + ' ' + name + ' (' + (x.inv.invoiceRef || 'no number') + '): ' +
+           x.c.issues.slice(0, 3).join(' ');
+  });
+  pushMsg('assistant',
+    'I need your input on ' + open.length + ' invoice' + (open.length > 1 ? 's' : '') + ':\n\n' +
+    lines.join('\n\n') + '\n\nReply with the correct details, for example: "#1 is Westlake" or ' +
+    '"#2 line 4 price is 12.50". I will update the invoice for you.');
+  showTab('chat');
+}
+
+/* ============================================================
+   CLEAR / RESET
+   ============================================================ */
+function clearAll(silent){
+  if (!silent && (files.length || invoices.length) &&
+      !confirm('Clear all files, invoices and output? Your API key stays saved.')) return false;
+  files = []; invoices = [];
+  chat = []; undoStack = [];
+  $('#undoBtn').disabled = true;
+  tok = { fresh:0, cacheWrite:0, cacheRead:0, out:0, calls:0 };
+  $('#log').innerHTML = '';
+  $('#testOut').textContent = '';
+  toggleOut(false);
+  $('#progwrap').className = '';
+  renderFiles(); renderInvoices(); renderTokens(); renderChat();
+  setStatus('Ready');
+  log('Cleared. Ready for the next batch.');
+  return true;
+}
+$('#clearAllBtn').addEventListener('click', () => clearAll(false));
+
+$('#resetAllBtn').addEventListener('click', () => {
+  if (!confirm('Reset the whole app? This also removes the saved API keys and settings from this browser.')) return;
+  try {
+    ['lm_provider','lm_key_claude','lm_key_gemini','lm_key_other','lm_model_claude','lm_model_gemini',
+     'lm_model_other','lm_base','lm_mode','lm_desc','lm_gemver','lm_house','lm_house2','lm_view']
+      .forEach(k => localStorage.removeItem(k));
+  } catch(e){}
+  $('#provider').value = DEFAULTS.provider;
+  applyProviderUI();
+  $('#key').value = '';
+  $('#model').value = PROVIDERS[DEFAULTS.provider].model;
+  $('#mode').value = DEFAULTS.mode;
+  $('#descOn').checked = DEFAULTS.desc;
+  clearAll(true);
+  log('App reset to a fresh start.');
+  setStatus('Reset complete — enter an API key to begin');
+});
+
+/* ---------- test connection ---------- */
+$('#testBtn').addEventListener('click', async () => {
+  const out = $('#testOut');
+  if (!apiKey()){ out.textContent = 'Enter a key first'; out.style.color = 'var(--bad)'; return; }
+  out.textContent = 'Checking...'; out.style.color = 'var(--muted)';
+  try{
+    let res;
+    if (prov() === 'gemini'){
+      res = await geminiPost('models/' + encodeURIComponent(modelName()) + ':generateContent',
+        { contents:[{ role:'user', parts:[{ text:'ping' }] }], generationConfig:{ maxOutputTokens:8 } });
+    } else {
+      res = await netPost('https://api.anthropic.com/v1/messages',
+        { 'content-type':'application/json', 'x-api-key': apiKey(),
+          'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+        { model: modelName(), max_tokens:16, messages:[{ role:'user', content:'ping' }] });
+    }
+    if (res.ok){ out.textContent = 'Connection works'; out.style.color = 'var(--ok)'; saveSettings(); }
+    else { const e = await httpError(res); out.textContent = e.message; out.style.color = 'var(--bad)'; }
+  }catch(e){
+    out.textContent = 'Could not reach the provider. Check your internet connection.';
+    out.style.color = 'var(--bad)';
+  }
+});
+
+/* ---------- live model list (names change over time) ---------- */
+async function loadModels(silent){
+  const out = $('#testOut');
+  if (!apiKey()){ out.textContent = 'Enter a key first'; out.style.color = 'var(--bad)'; return; }
+  if (!silent){ out.textContent = 'Loading model list...'; out.style.color = 'var(--muted)'; }
+  try{
+    let ids = [];
+    if (prov() === 'gemini'){
+      let res = null, lastErr = null;
+      for (const v of ['v1beta','v1']){
+        const r = await netGet(gemUrl('models?pageSize=200', v), {});
+        if (r.ok){ res = r; setGemVer(v); break; }
+        lastErr = await httpError(r);
+      }
+      if (!res) throw lastErr;
+      const data = await res.json();
+      ids = (data.models || [])
+        .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+        .map(m => String(m.name || '').replace('models/',''))
+        .filter(id => id && !/embedding|aqa|tts|image|live|audio|transcribe|translate|veo|imagen|thinking/i.test(id));
+    } else if (prov() === 'other'){
+      const res = await netGet(baseUrl() + '/models', { 'authorization':'Bearer ' + apiKey() });
+      if (!res.ok) throw await httpError(res);
+      const data = await res.json();
+      ids = (data.data || data.models || []).map(m => m.id || m.name).filter(Boolean);
+    } else {
+      const res = await netGet('https://api.anthropic.com/v1/models?limit=100',
+        { 'x-api-key': apiKey(), 'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true' });
+      if (!res.ok) throw await httpError(res);
+      const data = await res.json();
+      ids = (data.data || []).map(m => m.id).filter(Boolean);
+    }
+    if (!ids.length) throw new Error('This key returned no usable models.');
+    $('#models').innerHTML = ids.map(id => '<option value="' + esc(id) + '"></option>').join('');
+    if (!ids.includes(modelName())){
+      const wish = (FALLBACKS[prov()] || []).find(m => ids.includes(m));
+      const pick = wish || ids.find(id => /flash-latest|sonnet/i.test(id)) ||
+                   ids.find(id => /flash|sonnet|haiku/i.test(id)) || ids[0];
+      $('#model').value = pick;
+      saveSettings();
+      out.textContent = ids.length + ' models loaded. Switched to ' + pick + '.';
+    } else {
+      out.textContent = ids.length + ' models loaded.';
+    }
+    out.style.color = 'var(--ok)';
+    log('Model list loaded: ' + ids.slice(0, 6).join(', ') + (ids.length > 6 ? ' ...' : ''), 's');
+  }catch(e){
+    lastProblem = e.message;
+    out.textContent = e.message; out.style.color = 'var(--bad)';
+    if (silent) throw e;
+  }
+}
+$('#loadModelsBtn').addEventListener('click', () => loadModels(false));
+
+/* ---------- one-button connect: works out the provider from the key ---------- */
+let lastProblem = '';
+
+function cleanKey(){
+  let k = $('#key').value.replace(/[\s"']/g, '').trim();
+  if (k !== $('#key').value) $('#key').value = k;
+  return k;
+}
+function guessProvider(k){
+  if (/^sk-ant/i.test(k)) return 'claude';
+  if (/^AIza/.test(k) || /^AQ\./.test(k) || /^ya29\./.test(k)) return 'gemini';
+  if (/^(sk|gsk|xai|or)[-_]/i.test(k)) return 'other';    // OpenAI, Groq, xAI, OpenRouter ...
+  return null;
+}
+async function listFor(providerName){
+  const was = $('#provider').value;
+  $('#provider').value = providerName;
+  try { await loadModels(true); return true; }
+  catch(e){ $('#provider').value = was; throw e; }
+}
+
+$('#connectBtn').addEventListener('click', async () => {
+  const out = $('#testOut');
+  const k = cleanKey();
+  if (!k){ out.textContent = 'Paste your API key first.'; out.style.color = 'var(--bad)'; return; }
+  out.textContent = 'Connecting...'; out.style.color = 'var(--muted)';
+  const order = guessProvider(k) ? [guessProvider(k)] : ['claude','gemini','other'];
+  let lastErr = null;
+  for (const pname of order){
+    try{
+      $('#provider').value = pname;
+      applyProviderUI();
+      $('#key').value = k;
+      saveSettings();
+      await loadModels(true);                     // fills the dropdown and picks a usable model
+      const ok = await pingModel();
+      if (ok){
+        saveSettings();
+        out.innerHTML = 'Connected — ' + (pname === 'gemini' ? 'Gemini' : 'Claude') +
+                        ' &middot; ' + esc(modelName());
+        out.style.color = 'var(--ok)';
+        log('Connected to ' + pname + ' using ' + modelName(), 's');
+        refreshRun();
+        return;
+      }
+      lastErr = new Error('The key works but the model would not answer.');
+    }catch(e){ lastErr = e; }
+  }
+  out.textContent = (lastErr && lastErr.message) || 'Could not connect.';
+  out.style.color = 'var(--bad)';
+  lastProblem = (lastErr && lastErr.message) || '';
+});
+
+/* tries the current model, then the fallback list, so one dead model does not block the user */
+async function pingModel(){
+  const tries = [modelName()].concat(FALLBACKS[prov()] || []).filter(Boolean);
+  for (const m of tries){
+    try{
+      let res;
+      if (prov() === 'gemini'){
+        runModel = m;
+        res = await geminiPost('models/' + encodeURIComponent(m) + ':generateContent',
+          { contents:[{ role:'user', parts:[{ text:'ping' }] }], generationConfig:{ maxOutputTokens:8 } });
+      } else if (prov() === 'other'){
+        runModel = m;
+        res = await netPost(baseUrl() + '/chat/completions',
+          { 'content-type':'application/json', 'authorization':'Bearer ' + apiKey() },
+          { model: m, max_tokens: 8, messages:[{ role:'user', content:'ping' }] });
+      } else {
+        runModel = m;
+        res = await netPost('https://api.anthropic.com/v1/messages',
+          { 'content-type':'application/json', 'x-api-key': apiKey(),
+            'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+          { model: m, max_tokens:16, messages:[{ role:'user', content:'ping' }] });
+      }
+      runModel = null;
+      if (res.ok){ $('#model').value = m; return true; }
+      const e = await httpError(res);
+      lastProblem = e.message;
+      if (e.busy) { $('#model').value = m; return true; }   // busy still means the key works
+    }catch(e){
+      runModel = null;
+      lastProblem = e.message;
+      if (e.network) throw e;                               // no point trying other models
+    }
+  }
+  runModel = null;
+  return false;
+}
+
+/* ---------- diagnostics ---------- */
+$('#diagBtn').addEventListener('click', async () => {
+  const k = cleanKey();
+  const mask = k ? k.slice(0, 6) + '...' + k.slice(-4) + ' (' + k.length + ' chars)' : 'NOT ENTERED';
+  const lines = [
+    'Pricebook Invoice Convertor — diagnostics',
+    'Time        : ' + new Date().toString(),
+    'Page        : ' + location.href,
+    'Opened from : ' + (location.protocol === 'file:' ? 'a downloaded file (normal)' : location.protocol),
+    'Browser     : ' + navigator.userAgent,
+    'Online      : ' + (navigator.onLine ? 'yes' : 'no'),
+    'Provider    : ' + prov(),
+    'Model       : ' + modelName(),
+    'Key         : ' + mask,
+    'Key looks   : ' + (guessProvider(k) || 'unrecognised prefix'),
+    'Gemini API  : ' + gemVer,
+    'Base URL    : ' + (prov() === 'other' ? baseUrl() : 'n/a'),
+    'Last problem: ' + (lastProblem || 'none recorded')
+  ];
+  $('#diagOut').textContent = lines.join('\n') + '\n\nChecking the provider...';
+  $('#diagModal').classList.add('on');
+  let check = '';
+  try{
+    await loadModels(true);
+    check = 'Model list: OK — the key and the internet connection both work.';
+    try{
+      const ok = await pingModel();
+      check += '\nTest message: ' + (ok ? 'OK — ready to convert.' : 'failed — ' + lastProblem);
+    }catch(e){ check += '\nTest message: failed — ' + e.message; }
+  }catch(e){
+    check = 'Model list: FAILED — ' + e.message;
+  }
+  $('#diagOut').textContent = lines.join('\n') + '\n\n' + check;
+});
+$('#diagClose').addEventListener('click', () => $('#diagModal').classList.remove('on'));
+$('#diagModal').addEventListener('click', e => { if (e.target.id === 'diagModal') e.currentTarget.classList.remove('on'); });
+$('#diagCopy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('#diagOut').textContent); $('#diagCopy').textContent = 'Copied'; }
+  catch(e){ $('#diagCopy').textContent = 'Select the text and copy'; }
+  setTimeout(() => { $('#diagCopy').textContent = 'Copy report'; }, 2500);
+});
+
+/* ---------- help ---------- */
+$('#helpBtn').addEventListener('click', () => $('#helpModal').classList.add('on'));
+$('#closeHelp').addEventListener('click', () => $('#helpModal').classList.remove('on'));
+$('#helpModal').addEventListener('click', e => { if (e.target.id === 'helpModal') e.currentTarget.classList.remove('on'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#helpModal').classList.remove('on'); });
+
+/* ---------- simple / advanced view ---------- */
+function applyView(){
+  const simple = localStorage.getItem('lm_view') !== 'adv';
+  document.body.classList.toggle('simple', simple);
+  $('#modeBtn').textContent = simple ? 'Advanced view' : 'Simple view';
+  markConnected();
+}
+$('#modeBtn').addEventListener('click', () => {
+  localStorage.setItem('lm_view', localStorage.getItem('lm_view') === 'adv' ? 'simple' : 'adv');
+  applyView();
+});
+function markConnected(){
+  const ready = apiKey().length > 10;
+  $('#cardConn').classList.toggle('ready', ready);
+  $('#connBadge').classList.toggle('on', ready && document.body.classList.contains('simple'));
+  $('#connWho').textContent = ready ? ' — ' + PROV_NAME[prov()] + ' · ' + modelName() : '';
+}
+$('#connEdit').addEventListener('click', () => {
+  $('#cardConn').classList.remove('ready');
+  $('#connBadge').classList.remove('on');
+});
+
+/* ---------- company key, if one was pasted into this file ---------- */
+function applyBuiltIn(){
+  if (!BUILT_IN.key || BUILT_IN.key.length < 10) return;
+  const pname = BUILT_IN.provider || 'gemini';
+  if (localStorage.getItem('lm_key_' + pname)) return;      // person already has their own
+  $('#provider').value = pname;
+  applyProviderUI();
+  $('#key').value = BUILT_IN.key.trim();
+  if (BUILT_IN.model) $('#model').value = BUILT_IN.model;
+  if (BUILT_IN.base) $('#baseUrl').value = BUILT_IN.base;
+  saveSettings();
+  log('Using the company key built into this file', 's');
+}
+
+/* ---------- boot ---------- */
+loadSettings();
+applyBuiltIn();
+renderFiles();
+renderInvoices();
+renderTokens();
+renderChat();
+applyView();
+log('Loaded ' + VENDORS.length + ' vendors and ' + SITES.length + ' stores · provider: ' + (prov() === 'gemini' ? 'Gemini' : 'Claude'));
+setStatus('Ready');
+</script>
+</body>
+</html>
