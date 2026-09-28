@@ -92,14 +92,14 @@ def handle(identity: Identity, message: str, settings: Settings,
     # Owner gate first: the grow-via-chat actions are owner-only; a non-owner can
     # never reach them (they are not even offered a confirmation).
     if owner_only and not identity.is_owner:
-        msg = ("Yeh sirf owner (Furqan) kar sakte hain — vendor/site/rule add karna "
+        msg = ("Yeh sirf owner kar sakte hain — vendor/site/rule add karna "
                "ya rule ko live karna. Aap yeh nahi kar sakte.")
         chatlog.log_event(uname, "refusal", {"text": message, "blocked": prop.action}, settings)
         return AgentResponse(msg, "red", source=prop.source)
 
     # Role gate up front so a User isn't asked to confirm something they can't do.
     if reviewer_only and not identity.is_reviewer:
-        msg = ("Yeh kaam sirf Reviewer (Farhan/Hamza) kar sakte hain. Aap request "
+        msg = ("Yeh kaam sirf Reviewer kar sakte hain. Aap request "
                "kar sakte hain — main unhe bata sakta hoon, lekin approve aap nahi kar sakte.")
         chatlog.log_event(uname, "answer", {"text": msg, "blocked": prop.action}, settings)
         return AgentResponse(msg, "amber", source=prop.source)

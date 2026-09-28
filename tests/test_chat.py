@@ -17,7 +17,7 @@ from pdi_invoice_converter.chat import llm
 from pdi_invoice_converter.chat.identity import Identity
 from pdi_invoice_converter.config import ROOT, Settings
 
-OWNER = Identity(username="rauf", name="Furqan", role="owner", known=True)
+OWNER = Identity(username="owner", name="Owner", role="owner", known=True)
 USER = Identity(username="ali", name="Ali", role="user", known=True)
 VIEWER = Identity(username="director", name="Director", role="viewer", known=True)
 

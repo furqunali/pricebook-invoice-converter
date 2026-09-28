@@ -419,11 +419,11 @@ def run_action(name: str, settings: Settings, params: dict,
     _needs_confirm, reviewer_only, read_only, owner_only = ACTIONS[name]
     if owner_only and not identity.is_owner:
         return ActionResult(False,
-                            "Yeh sirf owner (Furqan) kar sakte hain. Aap yeh nahi kar sakte.",
+                            "Yeh sirf owner kar sakte hain. Aap yeh nahi kar sakte.",
                             "red")
     if reviewer_only and not identity.is_reviewer:
         return ActionResult(False,
-                            "Yeh sirf Reviewer (Farhan/Hamza) kar sakte hain. "
+                            "Yeh sirf Reviewer kar sakte hain. "
                             "Aap request kar sakte hain, approve nahi.", "red")
     if not read_only and not identity.can_act:
         return ActionResult(False, "Aap ke paas sirf read (viewer) ijazat hai.", "red")

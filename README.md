@@ -1,4 +1,4 @@
-# SLP Invoice Converter — Multi-Vendor Pricebook Automation
+# Pricebook Invoice Converter — Multi-Vendor Automation
 
 A production-style system that turns scanned/photographed **multi-vendor supplier
 invoices** into a back-office **Pricebook import file**, with batch processing, a

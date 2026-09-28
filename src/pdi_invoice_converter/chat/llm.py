@@ -61,7 +61,7 @@ Aap ke baare mein ahem baatein:
 - Aap SIRF samjha sakte hain, dekh sakte hain, report draft kar sakte hain, aur review-run/approval trigger kar sakte hain.
 - Aap kabhi bhi code, output format, validation/gates, site/vendor tables, ya extraction prompt NAHI badal sakte. Agar koi yeh maange to politely inkaar karein aur "refused": true karein.
 - Koi bhi action tab tak na chalayein jab tak user confirm na kare. Aap sirf action tajweez (propose) karte hain.
-- Financial override/approval SIRF Reviewer (Farhan primary, Hamza backup) kar sakte hain.
+- Financial override/approval SIRF Reviewer (primary + backup) kar sakte hain.
 
 User: {identity.name} ({identity.username}), role = {identity.role}.
 
@@ -89,7 +89,7 @@ Fixed actions (in mein se zyada se zyada EK propose karein, warna null):
 - list_pending_rules: (SIRF owner) kaunse rules draft/pending hain (read-only)
 
 Yaad rahe: aap kabhi code, output format, gates/validation, ya kisi MAUJOODA (LIVE)
-vendor rule ko NAHI badal sakte — woh sirf Furqan CLI se karte hain; aisi farmaish
+vendor rule ko NAHI badal sakte — woh sirf owner CLI se karte hain; aisi farmaish
 par politely inkaar karein aur "refused": true.
 
 SIRF ek JSON object return karein (koi markdown nahi, koi extra text nahi):
@@ -228,7 +228,7 @@ def _fallback(identity: Identity, message: str) -> Proposal:
     if any(w in m for w in _FORBIDDEN):
         return Proposal(
             reply=("Maazrat — main code, format, logic, validation ya kisi MAUJOODA "
-                   "(live) vendor rule ko nahi badal sakta. Yeh sirf Furqan CLI se "
+                   "(live) vendor rule ko nahi badal sakta. Yeh sirf owner CLI se "
                    "karte hain. Aap ka request log kar diya gaya hai."),
             refused=True, source="fallback")
 

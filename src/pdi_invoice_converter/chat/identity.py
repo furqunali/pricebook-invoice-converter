@@ -2,7 +2,7 @@
 
 No registration: the first time a username appears the agent asks for the
 person's name and stores it against ``%USERNAME%``; afterwards it auto-detects
-("Hi Farhan"). This is why the agent runs as a small service near the members'
+("Hi there"). This is why the agent runs as a small service near the members'
 machines / on the server, not a plain browser chat (a browser cannot read the
 computer's user).
 """

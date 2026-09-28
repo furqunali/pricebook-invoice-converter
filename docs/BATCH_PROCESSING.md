@@ -32,7 +32,7 @@ Partial batches are normal and desired: one bad invoice never holds up the good
 ones.
 
 ## Review re-run (`invoice2pdi review-run`)
-When a reviewer (Farhan; Hamza backup) has handled items:
+When a reviewer (primary; backup) has handled items:
 - **Fix:** correct the cause (better scan; add a site/vendor to the CSV) and move
   the PDF to `invoices\3-review\reprocess\`.
 - **Approve/override:** if the invoice's own numbers are genuinely wrong (vendor

@@ -84,7 +84,7 @@ def append_draft_rule(prompt_path: Path, vendor: str, item_col: str, qty_col: st
     if existing and existing["status"] == "LIVE":
         raise PermissionError(
             f"'{vendor}' already has a LIVE rule. Editing an existing rule is CLI-only "
-            f"(Furqan). Chat can only add a new draft.")
+            f"(owner). Chat can only add a new draft.")
     block = _render_block(vendor, item_col, qty_col, price_col, notes, "DRAFT")
     if existing:  # replace the old draft in place
         text = text.replace(existing["text"], block)
